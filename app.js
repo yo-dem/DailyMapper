@@ -11,6 +11,26 @@ let state = {
   isConnecting: false,
   connectStartId: null,
 };
+const THEME_KEY = "dm_v3_theme";
+
+function initTheme() {
+  const savedTheme =
+    localStorage.getItem(THEME_KEY) ||
+    document.documentElement.dataset.theme ||
+    "light";
+  setTheme(savedTheme);
+}
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const toggleButton = document.getElementById("theme-toggle");
+  if (toggleButton) toggleButton.textContent = theme === "dark" ? "☀️" : "🌙";
+  localStorage.setItem(THEME_KEY, theme);
+}
+function toggleTheme() {
+  setTheme(
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark",
+  );
+}
 
 function dayData() {
   if (!state.data[state.currentDay])
@@ -65,9 +85,10 @@ function renderDays(scrollToActive = false) {
   for (let i = 1; i <= last; i++) {
     const ds = `${y}-${String(m + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
     const dow = new Date(y, m, i).getDay();
-    const col = dow === 0 || dow === 6 ? "color:#d32f2f;font-weight:bold" : "";
+    const weekend = dow === 0 || dow === 6;
+    const col = weekend ? "color:#d32f2f;font-weight:bold" : "";
     const item = document.createElement("div");
-    item.className = `day-item ${ds === state.currentDay ? "active" : ""} ${ds === TODAY_ISO ? "is-today" : ""}`;
+    item.className = `day-item ${weekend ? "weekend" : ""} ${ds === state.currentDay ? "active" : ""} ${ds === TODAY_ISO ? "is-today" : ""}`;
     const dd = state.data[ds];
     const hasNote = dd && dd.notes && dd.notes.trim().length > 0;
     const hasMap = dd && dd.postits && dd.postits.length > 0;
@@ -326,6 +347,7 @@ function renderMap() {
     if (p.h) el.style.height = p.h + "px";
 
     el.style.background = POSTIT_BG[p.color] || "#ffffff";
+    el.dataset.color = p.color || "";
 
     el.innerHTML = `
       <div class="postit-color-strip" style="background:${p.color || "transparent"}"></div>
@@ -879,3 +901,5 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") navPostit(1);
   if (e.key === "ArrowLeft") navPostit(-1);
 });
+
+initTheme();
