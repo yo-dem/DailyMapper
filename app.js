@@ -383,8 +383,10 @@ function escHtml(s) {
 function addPostit() {
   const dd = dayData();
   const rect = container.getBoundingClientRect();
-  const baseX = (rect.width / 2 - state.panX) / state.zoom - 110;
-  const baseY = (rect.height / 2 - state.panY) / state.zoom - 60;
+  const screenCenterX = window.innerWidth / 2;
+  const screenCenterY = window.innerHeight / 2;
+  const baseX = (screenCenterX - rect.left - state.panX) / state.zoom - 110;
+  const baseY = (screenCenterY - rect.top - state.panY) / state.zoom - 60;
   const offset = 28;
   const index = dd.postits.length;
   dd.postits.push({
@@ -739,6 +741,7 @@ function switchView(v, btn) {
     .forEach((el) => el.classList.remove("active"));
   document.getElementById(v + "-view").classList.add("active");
   btn.classList.add("active");
+  const nav = document.getElementById("postit-nav");
   if (v === "map") {
     renderMap();
     // after DOM settles, center on first postit
@@ -749,6 +752,8 @@ function switchView(v, btn) {
         centerOnPostit(dd.postits[0], false);
       }
     });
+  } else {
+    nav.classList.remove("visible");
   }
 }
 
@@ -862,6 +867,34 @@ function triggerImport() {
   };
 }
 
+function triggerClearAll() {
+  const overlay = document.createElement("div");
+  overlay.className = "import-overlay";
+  overlay.innerHTML = `
+                  <div class="import-dialog">
+                    <h3>&#9888; Attenzione</h3>
+                    <p>Questa operazione cancellerà <strong>tutti i dati salvati</strong> in modo permanente.<br><br>Sei sicuro di voler proseguire?</p>
+                    <div class="import-dialog-btns">
+                      <button class="import-btn-cancel" id="clear-cancel">Annulla</button>
+                      <button class="import-btn-confirm" id="clear-confirm">Sì, cancella tutto</button>
+                    </div>
+                  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("clear-cancel").onclick = () => overlay.remove();
+  document.getElementById("clear-confirm").onclick = () => {
+    overlay.remove();
+    clearAllData();
+  };
+}
+
+function clearAllData() {
+  state.data = {};
+  localStorage.removeItem(STORAGE_KEY);
+  renderDays(true);
+  loadDay();
+  showToast("\u2713 Tutti i dati sono stati cancellati");
+}
+
 function doImport(ev) {
   const file = ev.target.files[0];
   if (!file) return;
@@ -891,8 +924,12 @@ function centerOnPostit(p, animated = true) {
   const el = document.getElementById("postit-" + p.id);
   const pw = el ? el.offsetWidth : p.w || 220;
   const ph = el ? el.offsetHeight : p.h || 120;
-  const targetX = rect.width / 2 - (p.x + pw / 2) * state.zoom;
-  const targetY = rect.height / 2 - (p.y + ph / 2) * state.zoom;
+
+  // Use screen center (same as addPostit) to ensure consistency
+  const screenCenterX = window.innerWidth / 2;
+  const screenCenterY = window.innerHeight / 2;
+  const targetX = screenCenterX - rect.left - (p.x + pw / 2) * state.zoom;
+  const targetY = screenCenterY - rect.top - (p.y + ph / 2) * state.zoom;
 
   if (!animated) {
     state.panX = targetX;

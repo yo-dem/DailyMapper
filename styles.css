@@ -12,7 +12,7 @@
   --today-color: rgba(220, 220, 255, 0.85);
 }
 html[data-theme="dark"] {
-  --md-primary: #6e5493;
+  --md-primary: #614e7a;
   --md-bg: #292840;
   --md-surface: #34304b;
   --md-on-primary: #f8f8f2;
@@ -325,11 +325,33 @@ html[data-theme="dark"] .fab {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 html[data-theme="dark"] .color-picker-popup,
-html[data-theme="dark"] .arrow-menu,
-html[data-theme="dark"] .import-overlay {
+html[data-theme="dark"] .arrow-menu {
   background: var(--surface-muted);
   border-color: var(--md-border);
   color: var(--md-on-surface);
+}
+html[data-theme="dark"] .import-overlay {
+  background: rgba(9, 10, 20, 0.75);
+  color: var(--md-on-surface);
+}
+html[data-theme="dark"] .import-dialog {
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .import-dialog p {
+  color: var(--md-on-surface);
+}
+html[data-theme="dark"] .import-dialog h3 {
+  color: #ff8b84;
+}
+html[data-theme="dark"] .import-btn-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--md-on-surface);
+}
+html[data-theme="dark"] .import-btn-confirm {
+  background: var(--md-primary);
 }
 .nav-tab {
   width: 120px;
@@ -352,6 +374,7 @@ html[data-theme="dark"] .import-overlay {
   border-bottom-color: var(--today-color);
 }
 #main-container {
+  position: relative;
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -411,7 +434,19 @@ html[data-theme="dark"] .import-overlay {
   flex: 1;
   overflow-y: auto;
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
   border-top: 1px solid var(--md-border);
+}
+#days-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+#days-list {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#days-list::-webkit-scrollbar {
+  display: none;
 }
 .day-item {
   padding: 12px 20px;
@@ -425,13 +460,16 @@ html[data-theme="dark"] .day-item {
   border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 .day-item.active {
-  background: rgba(98, 0, 238, 0.08) !important;
+  background: rgba(189, 147, 249, 0.16) !important;
   border-left: 5px solid var(--md-primary);
 }
 html[data-theme="dark"] .day-item.active {
   background: #2d2a3f !important;
 }
 .day-item.is-today {
+  background: rgba(220, 147, 249, 0.3);
+}
+html[data-theme="dark"] .day-item.is-today {
   background: rgba(124, 124, 151, 0.55);
 }
 .day-num {
@@ -934,6 +972,8 @@ html[data-theme="dark"] .btn-export:active {
   padding: 6px 14px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
   user-select: none;
+  width: fit-content;
+  max-width: calc(100% - 40px);
 }
 #postit-nav.visible {
   display: flex;

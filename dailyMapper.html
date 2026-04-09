@@ -47,6 +47,9 @@
             <button class="topbar-actions-item" onclick="triggerImport()">
               Importa
             </button>
+            <button class="topbar-actions-item" onclick="triggerClearAll()">
+              Cancella tutto
+            </button>
           </div>
         </div>
         <button
@@ -73,8 +76,8 @@
               onclick="openDateModal()"
               style="
                 cursor: pointer;
-                text-decoration: underline;
-                font-size: 14px;
+                text-decoration: none;
+                font-size: 16px;
                 text-transform: capitalize;
               "
             ></span>
@@ -156,23 +159,6 @@
               </svg>
             </div>
           </div>
-          <div id="postit-nav">
-            <button
-              class="nav-arrow"
-              onclick="navPostit(-1)"
-              title="Postit precedente"
-            >
-              &#8592;
-            </button>
-            <span id="nav-label"></span>
-            <button
-              class="nav-arrow"
-              onclick="navPostit(1)"
-              title="Postit successivo"
-            >
-              &#8594;
-            </button>
-          </div>
           <div id="zoom-controls">
             <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
             <div class="zoom-slider-container">
@@ -185,6 +171,23 @@
           </div>
           <button class="fab" onclick="addPostit()">+</button>
         </main>
+        <div id="postit-nav">
+          <button
+            class="nav-arrow"
+            onclick="navPostit(-1)"
+            title="Postit precedente"
+          >
+            &#8592;
+          </button>
+          <span id="nav-label"></span>
+          <button
+            class="nav-arrow"
+            onclick="navPostit(1)"
+            title="Postit successivo"
+          >
+            &#8594;
+          </button>
+        </div>
       </div>
     </div>
 
