@@ -12,13 +12,13 @@
   --today-color: rgba(220, 220, 255, 0.85);
 }
 html[data-theme="dark"] {
-  --md-primary: #614e7a;
-  --md-bg: #292840;
+  --md-primary: #742e9c;
+  --md-bg: #302f41;
   --md-surface: #34304b;
   --md-on-primary: #f8f8f2;
   --md-on-surface: #e8e8f8;
   --md-border: #4c4667;
-  --md-canvas-bg: #2b2841;
+  --md-canvas-bg: #40205f;
   --md-canvas-dots: rgba(248, 248, 242, 0.3);
   --today-color: rgba(189, 147, 249, 0.16);
   --surface-muted: #2f2b47;
@@ -327,9 +327,9 @@ html[data-theme="dark"] .fab {
 }
 html[data-theme="dark"] .color-picker-popup,
 html[data-theme="dark"] .arrow-menu {
-  background: var(--surface-muted);
+  background: var(--md-surface);
   border-color: var(--md-border);
-  color: var(--md-on-surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 html[data-theme="dark"] .import-overlay {
   background: rgba(9, 10, 20, 0.75);
@@ -756,39 +756,40 @@ html[data-theme="dark"] .day-item.weekend span {
 
 .arrow-menu {
   position: fixed;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  padding: 5px;
+  padding: 8px;
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   font-family: var(--font-main);
-  font-size: 13px;
-  min-width: 185px;
+  font-size: 14px;
+  min-width: 200px;
 }
 .arrow-menu-btn {
   border: none;
   background: none;
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 10px 14px;
   text-align: left;
   border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #333;
+  gap: 10px;
+  color: var(--md-on-surface);
   transition: background 0.12s;
+  font-weight: 500;
 }
 .arrow-menu-btn:hover {
-  background: #f5f0ff;
+  background: var(--control-bg);
   color: var(--md-primary);
 }
 .arrow-menu-btn.danger:hover {
-  background: #fff0f0;
-  color: #c00;
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
 }
 
 /* export / import */
