@@ -7,7 +7,7 @@
   --md-on-surface: #222;
   --md-border: #e0e0e0;
   --md-canvas-bg: #eeeeee;
-  --md-canvas-dots: #d0d0d0;
+  --md-canvas-dots: rgb(30, 30, 17, 0.3);
   --font-main: "Poppins", sans-serif;
   --today-color: rgba(220, 220, 255, 0.85);
 }
@@ -19,7 +19,7 @@ html[data-theme="dark"] {
   --md-on-surface: #e8e8f8;
   --md-border: #4c4667;
   --md-canvas-bg: #2b2841;
-  --md-canvas-dots: rgba(248, 248, 242, 0.07);
+  --md-canvas-dots: rgba(248, 248, 242, 0.3);
   --today-color: rgba(189, 147, 249, 0.16);
   --surface-muted: #2f2b47;
   --text-muted: #c6c7dc;
