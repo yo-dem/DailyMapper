@@ -158,11 +158,63 @@ function renderDays(scrollToActive = false) {
     const dd = state.data[ds];
     const hasNote = dd && dd.notes && dd.notes.trim().length > 0;
     const hasMap = dd && dd.postits && dd.postits.length > 0;
-    const indicators =
-      hasNote || hasMap
-        ? `<span class="day-indicators">${hasNote ? '<span class="day-dot has-note" title="Ha una nota"></span>' : ""}${hasMap ? '<span class="day-dot has-map" title="Ha una mappa"></span>' : ""}</span>`
-        : "";
-    item.innerHTML = `<span class="day-num">${i}</span><span style="${col}">${new Date(y, m, i).toLocaleString("it-IT", { weekday: "short" })}</span>${indicators}`;
+    const indicators = document.createElement("span");
+    indicators.className = "day-indicators";
+
+    if (hasNote) {
+      const noteDot = document.createElement("span");
+      noteDot.className = "day-dot has-note";
+      noteDot.title = "Clicca per vedere la nota";
+      noteDot.onclick = (e) => {
+        e.stopPropagation();
+        state.currentDay = ds;
+        renderDays(false);
+        loadDay();
+        switchView(
+          "editor",
+          document.querySelector('.nav-tab[onclick*="editor"]'),
+        );
+      };
+      indicators.appendChild(noteDot);
+    }
+
+    if (hasMap) {
+      const mapDot = document.createElement("span");
+      mapDot.className = "day-dot has-map";
+      mapDot.title = "Clicca per vedere la mappa";
+      mapDot.onclick = (e) => {
+        e.stopPropagation();
+        state.currentDay = ds;
+        renderDays(false);
+        loadDay();
+        switchView("map", document.querySelector('.nav-tab[onclick*="map"]'));
+        // Center on first postit after switching to map view
+        requestAnimationFrame(() => {
+          const dd = dayData();
+          if (dd.postits && dd.postits.length > 0) {
+            centerOnPostit(dd.postits[0], false);
+          }
+        });
+      };
+      indicators.appendChild(mapDot);
+    }
+
+    // Create day number element
+    const dayNum = document.createElement("span");
+    dayNum.className = "day-num";
+    dayNum.textContent = i;
+
+    // Create day name element
+    const dayName = document.createElement("span");
+    dayName.style.cssText = col;
+    dayName.textContent = new Date(y, m, i).toLocaleString("it-IT", {
+      weekday: "short",
+    });
+
+    // Add all elements to the day item
+    item.appendChild(dayNum);
+    item.appendChild(dayName);
+    item.appendChild(indicators);
     item.onclick = () => {
       state.currentDay = ds;
       renderDays(false);

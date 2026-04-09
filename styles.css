@@ -480,22 +480,39 @@ html[data-theme="dark"] .day-item.is-today {
 .day-indicators {
   margin-left: auto;
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
 }
 .day-dot {
-  width: 7px;
-  height: 7px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    opacity 0.15s;
+  border: 1px solid transparent;
+}
+.day-dot:hover {
+  transform: scale(1.2);
+  opacity: 1;
 }
 .day-dot.has-note {
   background: #6200ee;
-  opacity: 0.7;
+  opacity: 0.8;
 }
 .day-dot.has-map {
   background: #00897b;
-  opacity: 0.7;
+  opacity: 0.8;
+}
+html[data-theme="dark"] .day-dot.has-note {
+  background: #9c7cfa;
+  opacity: 0.9;
+}
+html[data-theme="dark"] .day-dot.has-map {
+  background: #4db6ac;
+  opacity: 0.9;
 }
 .view {
   display: none;
@@ -636,7 +653,7 @@ html[data-theme="dark"] .day-item.weekend span {
 }
 .arrow-path {
   stroke: #bbb;
-  stroke-width: 1.5;
+  stroke-width: 2.5;
   fill: none;
   pointer-events: none;
   transition:
@@ -645,14 +662,14 @@ html[data-theme="dark"] .day-item.weekend span {
 }
 .arrow-hit {
   stroke: transparent;
-  stroke-width: 20;
+  stroke-width: 25;
   fill: none;
   pointer-events: auto;
   cursor: pointer;
 }
 .arrow-group:hover .arrow-path {
   stroke: var(--md-primary);
-  stroke-width: 2.5;
+  stroke-width: 3.5;
 }
 .curve-handle {
   fill: var(--md-primary);
