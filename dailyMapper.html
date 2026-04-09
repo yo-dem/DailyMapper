@@ -24,20 +24,6 @@
           Note
         </button>
         <button class="nav-tab" onclick="switchView('map', this)">Mappa</button>
-        <button
-          class="btn-export"
-          onclick="exportJSON()"
-          title="Esporta JSON (Ctrl+E)"
-        >
-          &#8595; Esporta
-        </button>
-        <button
-          class="btn-export"
-          onclick="triggerImport()"
-          title="Importa JSON"
-        >
-          &#8593; Importa
-        </button>
         <input
           type="file"
           id="import-file-input"
@@ -45,6 +31,24 @@
           style="display: none"
           onchange="doImport(event)"
         />
+        <div class="topbar-actions">
+          <button
+            class="topbar-actions-btn"
+            id="topbar-actions-btn"
+            onclick="toggleTopbarActions(event)"
+            title="Altro"
+          >
+            ⋮
+          </button>
+          <div class="topbar-actions-panel" id="topbar-actions-panel">
+            <button class="topbar-actions-item" onclick="exportJSON()">
+              Esporta
+            </button>
+            <button class="topbar-actions-item" onclick="triggerImport()">
+              Importa
+            </button>
+          </div>
+        </div>
         <button
           class="theme-toggle"
           id="theme-toggle"
@@ -66,7 +70,7 @@
             />
             <span
               id="month-label"
-              onclick="document.getElementById('date-picker').showPicker()"
+              onclick="openDateModal()"
               style="
                 cursor: pointer;
                 text-decoration: underline;
@@ -184,6 +188,24 @@
       </div>
     </div>
 
+    <div id="date-modal" class="date-modal hidden" onclick="closeDateModal()">
+      <div class="date-modal-card" onclick="event.stopPropagation()">
+        <div class="date-modal-header">
+          <span>Scegli data</span>
+          <button class="close-btn" onclick="closeDateModal()">✕</button>
+        </div>
+        <div class="date-modal-nav">
+          <button onclick="changeModalMonth(-1)">❮</button>
+          <div id="date-modal-month-label"></div>
+          <button onclick="changeModalMonth(1)">❯</button>
+        </div>
+        <div class="date-modal-weekdays">
+          <span>Lu</span><span>Ma</span><span>Me</span><span>Gi</span
+          ><span>Ve</span><span>Sa</span><span>Do</span>
+        </div>
+        <div class="date-modal-grid" id="date-modal-grid"></div>
+      </div>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>

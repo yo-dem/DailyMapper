@@ -71,7 +71,6 @@ textarea,
 .theme-toggle {
   width: 40px;
   height: 40px;
-  margin-left: auto;
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
@@ -84,6 +83,7 @@ textarea,
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-left: 10px;
 }
 .theme-toggle:hover {
   background: rgba(255, 255, 255, 0.28);
@@ -95,8 +95,203 @@ html[data-theme="dark"] .theme-toggle {
 html[data-theme="dark"] .theme-toggle:hover {
   background: rgba(255, 255, 255, 0.12);
 }
+.topbar-actions {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+.topbar-actions-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.topbar-actions-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+.topbar-actions-panel {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  min-width: 128px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1001;
+}
+.topbar-actions-panel.open {
+  display: flex;
+}
+.topbar-actions-item {
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface);
+  font-size: 13px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.topbar-actions-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+html[data-theme="dark"] .topbar-actions-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--md-on-surface);
+}
+html[data-theme="dark"] .topbar-actions-panel {
+  background: var(--md-surface);
+  border-color: var(--md-border);
+}
+html[data-theme="dark"] .topbar-actions-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+html[data-theme="dark"] .topbar-actions-item {
+  color: var(--md-on-surface);
+}
 html[data-theme="dark"] .nav-tab {
   color: rgba(255, 255, 255, 0.78);
+}
+.date-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.date-modal.hidden {
+  display: none;
+}
+.date-modal-card {
+  width: min(520px, 92vw);
+  max-width: 520px;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 28px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+  color: var(--md-on-surface);
+}
+.date-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.close-btn {
+  border: none;
+  background: transparent;
+  color: var(--md-on-surface);
+  font-size: 22px;
+  cursor: pointer;
+}
+.date-modal-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.date-modal-nav button {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--md-border);
+  background: var(--surface-muted);
+  color: var(--md-on-surface);
+  font-size: 18px;
+  cursor: pointer;
+}
+.date-modal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+.date-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+.date-modal-cell {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--md-on-surface);
+  font-size: 16px;
+}
+.date-modal-cell.empty {
+  background: transparent;
+  border: none;
+}
+.date-modal-day {
+  border: 1px solid var(--md-border);
+  background: var(--surface-muted);
+  cursor: pointer;
+}
+.date-modal-day:hover {
+  background: rgba(189, 147, 249, 0.2);
+}
+.date-modal-day.selected {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-color: transparent;
+}
+.date-modal-day.today {
+  box-shadow: inset 0 0 0 1px var(--md-primary);
+}
+html[data-theme="dark"] .date-modal {
+  background: rgba(9, 10, 20, 0.85);
+}
+html[data-theme="dark"] .date-modal-card {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="dark"] .date-modal-nav button {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+html[data-theme="dark"] .date-modal-day {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html[data-theme="dark"] .date-modal-day:hover {
+  background: rgba(189, 147, 249, 0.16);
+}
+html[data-theme="dark"] .date-modal-day.selected {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+html[data-theme="dark"] .date-modal-day.today {
+  box-shadow: inset 0 0 0 1px rgba(189, 147, 249, 0.6);
 }
 html[data-theme="dark"] .nav-tab.active,
 html[data-theme="dark"] .nav-tab:hover {

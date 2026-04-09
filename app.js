@@ -32,6 +32,15 @@ function toggleTheme() {
   );
 }
 
+function toggleTopbarActions(e) {
+  e.stopPropagation();
+  document.getElementById("topbar-actions-panel").classList.toggle("open");
+}
+
+window.addEventListener("click", () => {
+  document.getElementById("topbar-actions-panel").classList.remove("open");
+});
+
 function dayData() {
   if (!state.data[state.currentDay])
     state.data[state.currentDay] = {
@@ -68,6 +77,63 @@ function pickDate(e) {
   state.currentDay = e.target.value;
   renderDays(true);
   loadDay();
+}
+
+function openDateModal() {
+  state.modalViewDate = new Date(state.viewDate);
+  renderDateModal();
+  document.getElementById("date-modal").classList.remove("hidden");
+}
+function closeDateModal() {
+  document.getElementById("date-modal").classList.add("hidden");
+}
+function changeModalMonth(delta) {
+  state.modalViewDate.setMonth(state.modalViewDate.getMonth() + delta);
+  renderDateModal();
+}
+function selectModalDate(dateString) {
+  state.viewDate = new Date(dateString);
+  state.currentDay = dateString;
+  renderDays(true);
+  loadDay();
+  closeDateModal();
+}
+function renderDateModal() {
+  const monthLabel = document.getElementById("date-modal-month-label");
+  const grid = document.getElementById("date-modal-grid");
+  const year = state.modalViewDate.getFullYear();
+  const month = state.modalViewDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  monthLabel.textContent = state.modalViewDate.toLocaleString("it-IT", {
+    month: "long",
+    year: "numeric",
+  });
+
+  grid.innerHTML = "";
+  const startPadding = (firstDay.getDay() + 6) % 7;
+  for (let i = 0; i < startPadding; i++) {
+    const cell = document.createElement("div");
+    cell.className = "date-modal-cell empty";
+    grid.appendChild(cell);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isoDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "date-modal-cell date-modal-day";
+    cell.textContent = day;
+    if (isoDate === state.currentDay) {
+      cell.classList.add("selected");
+    }
+    if (isoDate === TODAY_ISO) {
+      cell.classList.add("today");
+    }
+    cell.onclick = () => selectModalDate(isoDate);
+    grid.appendChild(cell);
+  }
 }
 
 function renderDays(scrollToActive = false) {
