@@ -13,12 +13,12 @@
 }
 html[data-theme="dark"] {
   --md-primary: #742e9c;
-  --md-bg: #302f41;
+  --md-bg: #292840;
   --md-surface: #34304b;
   --md-on-primary: #f8f8f2;
   --md-on-surface: #e8e8f8;
   --md-border: #4c4667;
-  --md-canvas-bg: #40205f;
+  --md-canvas-bg: #57317e;
   --md-canvas-dots: rgba(248, 248, 242, 0.3);
   --today-color: rgba(189, 147, 249, 0.16);
   --surface-muted: #2f2b47;
@@ -384,6 +384,39 @@ html[data-theme="dark"] .import-btn-confirm {
   width: 320px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  min-width: 0;
+  max-width: 500px;
+  transition:
+    width 0.2s ease,
+    border-color 0.2s ease;
+  border-right: 1px solid var(--md-border);
+  overflow: hidden;
+}
+.sidebar-expander {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 120px;
+  background: var(--md-primary);
+  cursor: pointer;
+  z-index: 200;
+  border-radius: 3px 10px 10px 3px;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+.sidebar-expander:hover {
+  background: var(--md-primary);
+  opacity: 0.8;
+  width: 10px;
+}
+html[data-theme="dark"] .sidebar-expander {
+  background: var(--md-primary);
+}
+html[data-theme="dark"] .sidebar-expander:hover {
+  background: var(--md-primary);
 }
 #main-editor {
   width: 100%;
@@ -395,7 +428,7 @@ html[data-theme="dark"] .import-btn-confirm {
   font-family: inherit;
   font-size: 16px;
   line-height: 1.6;
-  background: var(--md-surface);
+  background-color: var(--md-surface);
   color: var(--md-on-surface);
 }
 #main-editor:focus {
@@ -468,7 +501,7 @@ html[data-theme="dark"] .day-item.active {
   background: #2d2a3f !important;
 }
 .day-item.is-today {
-  background: rgba(220, 147, 249, 0.3);
+  background: rgba(189, 147, 249, 0.08);
 }
 html[data-theme="dark"] .day-item.is-today {
   background: rgba(124, 124, 151, 0.55);

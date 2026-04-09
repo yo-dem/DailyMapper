@@ -12,6 +12,65 @@ let state = {
   connectStartId: null,
 };
 const THEME_KEY = "dm_v3_theme";
+const SIDEBAR_KEY = "dm_v3_sidebar";
+
+// ── sidebar resize ─────────────────────────────────────────────────────────────
+let sidebarWidth = parseInt(localStorage.getItem(SIDEBAR_KEY) || "320");
+
+function initSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const expander = document.getElementById("sidebar-expander");
+
+  // Set initial width
+  sidebar.style.width = sidebarWidth + "px";
+  updateSidebarContentVisibility();
+
+  // Expander click to toggle sidebar
+  expander.addEventListener("click", () => {
+    const sidebar = document.getElementById("sidebar");
+
+    if (sidebarWidth > 60) {
+      // Collapse completely
+      sidebarWidth = 0;
+      sidebar.style.width = "0px";
+    } else {
+      // Expand to default width
+      sidebarWidth = 320;
+      sidebar.style.width = "320px";
+      sidebar.style.display = "flex";
+    }
+    updateSidebarContentVisibility();
+    localStorage.setItem(SIDEBAR_KEY, sidebarWidth);
+  });
+}
+
+function updateSidebarContentVisibility() {
+  const sidebar = document.getElementById("sidebar");
+  const expander = document.getElementById("sidebar-expander");
+  const contentElements = document.querySelectorAll(
+    "#sidebar .month-nav, #sidebar .btn-oggi, #sidebar #days-list",
+  );
+
+  if (sidebarWidth === 0) {
+    // Completely hidden
+    sidebar.style.display = "flex";
+    sidebar.style.borderRightColor = "transparent";
+    expander.style.left = "0px";
+    contentElements.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.pointerEvents = "none";
+    });
+  } else {
+    // Sidebar visible
+    sidebar.style.display = "flex";
+    sidebar.style.borderRightColor = "var(--md-border)";
+    expander.style.left = sidebarWidth + "px";
+    contentElements.forEach((el) => {
+      el.style.opacity = "1";
+      el.style.pointerEvents = "auto";
+    });
+  }
+}
 
 function initTheme() {
   const savedTheme =
@@ -1058,3 +1117,4 @@ document.addEventListener("keydown", (e) => {
 });
 
 initTheme();
+initSidebar();
