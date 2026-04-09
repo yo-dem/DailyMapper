@@ -236,6 +236,7 @@ html[data-theme="dark"] .nav-tab {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
+  min-height: 420px;
 }
 .date-modal-cell {
   width: 100%;
