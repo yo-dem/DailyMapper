@@ -12,16 +12,16 @@
   --today-color: rgba(220, 220, 255, 0.85);
 }
 html[data-theme="dark"] {
-  --md-primary: #742e9c;
+  --md-primary: #4f2e80;
   --md-bg: #292840;
   --md-surface: #34304b;
   --md-on-primary: #f8f8f2;
   --md-on-surface: #e8e8f8;
   --md-border: #4c4667;
-  --md-canvas-bg: #57317e;
+  --md-canvas-bg: #34304b;
   --md-canvas-dots: rgba(248, 248, 242, 0.3);
   --today-color: rgba(189, 147, 249, 0.16);
-  --surface-muted: #2f2b47;
+  --surface-muted: #2c273e;
   --text-muted: #c6c7dc;
   --control-bg: rgba(248, 248, 242, 0.08);
   --control-border: rgba(248, 248, 242, 0.14);
@@ -316,6 +316,9 @@ html[data-theme="dark"] .zoom-level-display {
   background: var(--control-bg);
   border-color: var(--control-border);
 }
+html[data-theme="dark"] .zoom-level-display {
+  color: #fff;
+}
 html[data-theme="dark"] .zoom-btn {
   color: var(--md-on-surface);
 }
@@ -413,10 +416,10 @@ html[data-theme="dark"] .import-btn-confirm {
   width: 10px;
 }
 html[data-theme="dark"] .sidebar-expander {
-  background: var(--md-primary);
+  background: #9c7cfa;
 }
 html[data-theme="dark"] .sidebar-expander:hover {
-  background: var(--md-primary);
+  background: #9c7cfa;
 }
 #main-editor {
   width: 100%;
@@ -444,7 +447,8 @@ html[data-theme="dark"] .sidebar-expander:hover {
   font-size: 12px;
   cursor: pointer;
   font-weight: 300;
-  width: 80%;
+  width: 85%;
+  height: 40px;
   text-transform: uppercase;
   margin: 0 auto;
   margin-bottom: 20px;
@@ -781,7 +785,7 @@ html[data-theme="dark"] .day-item.weekend span {
   font-size: 11px;
   font-weight: 500;
   color: var(--md-primary);
-  min-width: 30px;
+  width: 50px;
   text-align: center;
   background: var(--md-surface);
   border: 1px solid var(--md-border);
