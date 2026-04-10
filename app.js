@@ -48,7 +48,7 @@ function updateSidebarContentVisibility() {
   const sidebar = document.getElementById("sidebar");
   const expander = document.getElementById("sidebar-expander");
   const contentElements = document.querySelectorAll(
-    "#sidebar .month-nav, #sidebar .btn-oggi, #sidebar #days-list",
+      "#sidebar .month-nav, #sidebar .btn-oggi, #sidebar #days-list",
   );
 
   if (sidebarWidth === 0) {
@@ -74,9 +74,9 @@ function updateSidebarContentVisibility() {
 
 function initTheme() {
   const savedTheme =
-    localStorage.getItem(THEME_KEY) ||
-    document.documentElement.dataset.theme ||
-    "light";
+      localStorage.getItem(THEME_KEY) ||
+      document.documentElement.dataset.theme ||
+      "light";
   setTheme(savedTheme);
 }
 function setTheme(theme) {
@@ -87,7 +87,7 @@ function setTheme(theme) {
 }
 function toggleTheme() {
   setTheme(
-    document.documentElement.dataset.theme === "dark" ? "light" : "dark",
+      document.documentElement.dataset.theme === "dark" ? "light" : "dark",
   );
 }
 
@@ -101,12 +101,18 @@ window.addEventListener("click", () => {
 });
 
 function dayData() {
-  if (!state.data[state.currentDay])
+  if (!state.data[state.currentDay]) {
     state.data[state.currentDay] = {
       notes: "",
       postits: [],
       arrows: [],
+      agenda: {} // NUOVO: Predisposto per le ore
     };
+  }
+  // Fallback per salvataggi vecchi senza agenda
+  if (!state.data[state.currentDay].agenda) {
+    state.data[state.currentDay].agenda = {};
+  }
   return state.data[state.currentDay];
 }
 function save() {
@@ -199,13 +205,13 @@ function renderDays(scrollToActive = false) {
   const list = document.getElementById("days-list");
   list.innerHTML = "";
   const y = state.viewDate.getFullYear(),
-    m = state.viewDate.getMonth();
+      m = state.viewDate.getMonth();
   const last = new Date(y, m + 1, 0).getDate();
   document.getElementById("month-label").textContent =
-    state.viewDate.toLocaleString("it-IT", {
-      month: "long",
-      year: "numeric",
-    });
+      state.viewDate.toLocaleString("it-IT", {
+        month: "long",
+        year: "numeric",
+      });
   let activeEl = null;
   for (let i = 1; i <= last; i++) {
     const ds = `${y}-${String(m + 1).padStart(2, "0")}-${String(i).padStart(2, "0")}`;
@@ -230,8 +236,8 @@ function renderDays(scrollToActive = false) {
         renderDays(false);
         loadDay();
         switchView(
-          "editor",
-          document.querySelector('.nav-tab[onclick*="editor"]'),
+            "editor",
+            document.querySelector('.nav-tab[onclick*="editor"]'),
         );
       };
       indicators.appendChild(noteDot);
@@ -284,27 +290,29 @@ function renderDays(scrollToActive = false) {
   }
   if (scrollToActive && activeEl)
     setTimeout(
-      () =>
-        activeEl.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        }),
-      10,
+        () =>
+            activeEl.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            }),
+        10,
     );
 }
 
 function loadDay() {
   document.getElementById("main-editor").value = dayData().notes || "";
-  if (document.getElementById("map-view").classList.contains("active"))
-    renderMap();
+  if (document.getElementById("map-view").classList.contains("active")) renderMap();
+
+  // Se la vista attiva è agenda, aggiorna anche quella
+  if (document.getElementById("agenda-view").classList.contains("active")) renderAgenda();
 }
 
 // ── pan & zoom ────────────────────────────────────────────────────────────────
 const container = document.getElementById("map-canvas-container");
 const canvas = document.getElementById("infinite-canvas");
 let isPanning = false,
-  sx,
-  sy;
+    sx,
+    sy;
 
 container.onmousedown = (e) => {
   if (e.target === container || e.target === canvas) {
@@ -318,12 +326,12 @@ container.onwheel = (e) => {
   e.preventDefault();
   const rect = container.getBoundingClientRect();
   const mx = e.clientX - rect.left,
-    my = e.clientY - rect.top;
+      my = e.clientY - rect.top;
   const cx = (mx - state.panX) / state.zoom,
-    cy = (my - state.panY) / state.zoom;
+      cy = (my - state.panY) / state.zoom;
   state.zoom = Math.max(
-    0.3,
-    Math.min(2, state.zoom + (e.deltaY > 0 ? -0.03 : 0.03)),
+      0.3,
+      Math.min(2, state.zoom + (e.deltaY > 0 ? -0.03 : 0.03)),
   );
   state.panX = mx - cx * state.zoom;
   state.panY = my - cy * state.zoom;
@@ -350,9 +358,9 @@ function applyXform() {
 function adjustZoom(d) {
   const rect = container.getBoundingClientRect();
   const mx = rect.width / 2,
-    my = rect.height / 2;
+      my = rect.height / 2;
   const cx = (mx - state.panX) / state.zoom,
-    cy = (my - state.panY) / state.zoom;
+      cy = (my - state.panY) / state.zoom;
   state.zoom = Math.max(0.3, Math.min(2, state.zoom + d));
   state.panX = mx - cx * state.zoom;
   state.panY = my - cy * state.zoom;
@@ -384,10 +392,10 @@ function setZoomFromSlider(trackHeight, thumbHeight, y) {
   const newZoom = MIN_ZOOM + progress * (MAX_ZOOM - MIN_ZOOM);
   const rect = container.getBoundingClientRect();
   const mx = rect.width / 2,
-    my = rect.height / 2;
+      my = rect.height / 2;
   const oldZoom = state.zoom;
   const cx = (mx - state.panX) / oldZoom,
-    cy = (my - state.panY) / oldZoom;
+      cy = (my - state.panY) / oldZoom;
   state.zoom = newZoom;
   state.panX = mx - cx * state.zoom;
   state.panY = my - cy * state.zoom;
@@ -456,17 +464,17 @@ setTimeout(() => updateZoomSlider(), 100);
 */
 function boxEdge(rx, ry, rw, rh, tx, ty) {
   const cx = rx + rw / 2,
-    cy = ry + rh / 2;
+      cy = ry + rh / 2;
   const dx = tx - cx,
-    dy = ty - cy;
+      dy = ty - cy;
   if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return { x: cx, y: cy };
   const hw = rw / 2,
-    hh = rh / 2;
+      hh = rh / 2;
   // t to reach each wall from center in direction (dx,dy)
   const tX = hw / Math.abs(dx); // vertical walls
   const tY = hh / Math.abs(dy); // horizontal walls
   const t =
-    Math.abs(dx) < 0.01 ? tY : Math.abs(dy) < 0.01 ? tX : Math.min(tX, tY);
+      Math.abs(dx) < 0.01 ? tY : Math.abs(dy) < 0.01 ? tX : Math.min(tX, tY);
   return { x: cx + t * dx, y: cy + t * dy };
 }
 
@@ -485,10 +493,10 @@ function getRect(p) {
 // ── postit render ─────────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 }
 
 function addPostit() {
@@ -562,14 +570,14 @@ function updatePostitField(id, field, val) {
 // ── drag ─────────────────────────────────────────────────────────────────────
 function makeDraggable(el, p) {
   let drag = false,
-    ox,
-    oy;
+      ox,
+      oy;
   el.onmousedown = (e) => {
     if (
-      e.target.tagName === "INPUT" ||
-      e.target.tagName === "TEXTAREA" ||
-      e.target.closest(".link-handle") ||
-      e.target.closest(".postit-resize")
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.closest(".link-handle") ||
+        e.target.closest(".postit-resize")
     )
       return;
     drag = true;
@@ -597,9 +605,9 @@ function startResize(e, id) {
   const el = document.getElementById(`postit-${id}`);
   if (!p || !el) return;
   const startX = e.clientX,
-    startY = e.clientY;
+      startY = e.clientY;
   const startW = el.offsetWidth,
-    startH = el.offsetHeight;
+      startH = el.offsetHeight;
   const move = (me) => {
     p.w = Math.max(160, startW + (me.clientX - startX) / state.zoom);
     p.h = Math.max(80, startH + (me.clientY - startY) / state.zoom);
@@ -650,8 +658,8 @@ function endConnection(e) {
   state.isConnecting = false;
   document.getElementById("temp-line")?.remove();
   const targetEl = document
-    .elementFromPoint(e.clientX, e.clientY)
-    ?.closest(".postit");
+      .elementFromPoint(e.clientX, e.clientY)
+      ?.closest(".postit");
   if (targetEl) {
     const tid = parseInt(targetEl.id.replace("postit-", ""));
     if (tid && tid !== state.connectStartId) {
@@ -686,13 +694,13 @@ function drawArrows() {
     const r1 = getRect(p1);
     const r2 = getRect(p2);
     const cx1 = r1.x + r1.w / 2,
-      cy1 = r1.y + r1.h / 2;
+        cy1 = r1.y + r1.h / 2;
     const cx2 = r2.x + r2.w / 2,
-      cy2 = r2.y + r2.h / 2;
+        cy2 = r2.y + r2.h / 2;
     const midX = (cx1 + cx2) / 2,
-      midY = (cy1 + cy2) / 2;
+        midY = (cy1 + cy2) / 2;
     const cpX = midX + a.cp.dx,
-      cpY = midY + a.cp.dy;
+        cpY = midY + a.cp.dy;
 
     // Exit point from p1 toward cp, entry point into p2 from cp
     const spRaw = boxEdge(r1.x, r1.y, r1.w, r1.h, cpX, cpY);
@@ -707,7 +715,7 @@ function drawArrows() {
     const MARKER_OFFSET = 7;
     function offsetPt(edge, boxCx, boxCy, dist) {
       const ddx = edge.x - boxCx,
-        ddy = edge.y - boxCy;
+          ddy = edge.y - boxCy;
       const len = Math.hypot(ddx, ddy) || 1;
       return {
         x: edge.x + (ddx / len) * dist,
@@ -750,8 +758,8 @@ function drawArrows() {
     });
 
     const circle = document.createElementNS(
-      "http://www.w3.org/2000/svg",
-      "circle",
+        "http://www.w3.org/2000/svg",
+        "circle",
     );
     circle.setAttribute("class", "curve-handle");
     circle.setAttribute("cx", cpX.toFixed(1));
@@ -795,35 +803,35 @@ function showArrowMenu(e, a, dd) {
     return b;
   };
   menu.appendChild(
-    mkbtn("⇄", "Inverti direzione", "", () => {
-      [a.from, a.to] = [a.to, a.from];
-      a.cp.dx = -a.cp.dx;
-      a.cp.dy = -a.cp.dy;
-      drawArrows();
-      saveMap();
-      menu.remove();
-    }),
-  );
-  menu.appendChild(
-    mkbtn(
-      a.bidir ? "→" : "↔",
-      a.bidir ? "Freccia semplice" : "Bidirezionale",
-      "",
-      () => {
-        a.bidir = !a.bidir;
+      mkbtn("⇄", "Inverti direzione", "", () => {
+        [a.from, a.to] = [a.to, a.from];
+        a.cp.dx = -a.cp.dx;
+        a.cp.dy = -a.cp.dy;
         drawArrows();
         saveMap();
         menu.remove();
-      },
-    ),
+      }),
   );
   menu.appendChild(
-    mkbtn("✕", "Elimina connessione", "danger", () => {
-      dd.arrows = dd.arrows.filter((x) => x !== a);
-      drawArrows();
-      saveMap();
-      menu.remove();
-    }),
+      mkbtn(
+          a.bidir ? "→" : "↔",
+          a.bidir ? "Freccia semplice" : "Bidirezionale",
+          "",
+          () => {
+            a.bidir = !a.bidir;
+            drawArrows();
+            saveMap();
+            menu.remove();
+          },
+      ),
+  );
+  menu.appendChild(
+      mkbtn("✕", "Elimina connessione", "danger", () => {
+        dd.arrows = dd.arrows.filter((x) => x !== a);
+        drawArrows();
+        saveMap();
+        menu.remove();
+      }),
   );
   document.body.appendChild(menu);
   setTimeout(() => {
@@ -843,19 +851,22 @@ function deletePostit(id) {
   saveMap();
 }
 
+// ── MODIFICATO PER SUPPORTARE LA VISTA AGENDA ──
 function switchView(v, btn) {
   document
-    .querySelectorAll(".view")
-    .forEach((el) => el.classList.remove("active"));
+      .querySelectorAll(".view")
+      .forEach((el) => el.classList.remove("active"));
   document
-    .querySelectorAll(".nav-tab")
-    .forEach((el) => el.classList.remove("active"));
-  document.getElementById(v + "-view").classList.add("active");
-  btn.classList.add("active");
+      .querySelectorAll(".nav-tab")
+      .forEach((el) => el.classList.remove("active"));
+
+  const viewEl = document.getElementById(v + "-view");
+  if(viewEl) viewEl.classList.add("active");
+  if(btn) btn.classList.add("active");
+
   const nav = document.getElementById("postit-nav");
   if (v === "map") {
     renderMap();
-    // after DOM settles, center on first postit
     requestAnimationFrame(() => {
       const dd = dayData();
       if (dd.postits && dd.postits.length > 0) {
@@ -865,6 +876,12 @@ function switchView(v, btn) {
     });
   } else {
     nav.classList.remove("visible");
+  }
+
+  // Costruisci le ore se passiamo alla vista agenda
+  if (v === "agenda") {
+    renderAgenda();
+    scrollToCurrentTime(); // <--- Aggiungi questa riga qui
   }
 }
 
@@ -885,7 +902,7 @@ const POSTIT_COLORS = [
   { hex: "#546e7a", bg: "#eceff1", label: "Grigio" },
 ];
 const POSTIT_BG = Object.fromEntries(
-  POSTIT_COLORS.map((col) => [col.hex, col.bg]),
+    POSTIT_COLORS.map((col) => [col.hex, col.bg]),
 );
 
 function openColorPicker(e, id) {
@@ -1028,15 +1045,12 @@ function doImport(ev) {
 // ── postit navigation ─────────────────────────────────────────────────────────
 state.navIndex = 0;
 
-// Smoothly pan so postit p is centered in the viewport.
-// animated=true → eased RAF animation; false → instant (first load)
 function centerOnPostit(p, animated = true) {
   const rect = container.getBoundingClientRect();
   const el = document.getElementById("postit-" + p.id);
   const pw = el ? el.offsetWidth : p.w || 220;
   const ph = el ? el.offsetHeight : p.h || 120;
 
-  // Use screen center (same as addPostit) to ensure consistency
   const screenCenterX = window.innerWidth / 2;
   const screenCenterY = window.innerHeight / 2;
   const targetX = screenCenterX - rect.left - (p.x + pw / 2) * state.zoom;
@@ -1050,15 +1064,14 @@ function centerOnPostit(p, animated = true) {
   }
 
   const startX = state.panX,
-    startY = state.panY;
+      startY = state.panY;
   const dx = targetX - startX,
-    dy = targetY - startY;
-  const dur = 380; // ms
+      dy = targetY - startY;
+  const dur = 380;
   let start = null;
   function step(ts) {
     if (!start) start = ts;
     const prog = Math.min((ts - start) / dur, 1);
-    // ease-out cubic
     const t = 1 - Math.pow(1 - prog, 3);
     state.panX = startX + dx * t;
     state.panY = startY + dy * t;
@@ -1078,8 +1091,8 @@ function updateNavBar() {
   }
   nav.classList.add("visible");
   const idx =
-    ((state.navIndex % dd.postits.length) + dd.postits.length) %
-    dd.postits.length;
+      ((state.navIndex % dd.postits.length) + dd.postits.length) %
+      dd.postits.length;
   state.navIndex = idx;
   label.textContent = `${idx + 1} / ${dd.postits.length}`;
 }
@@ -1088,20 +1101,18 @@ function navPostit(dir) {
   const dd = dayData();
   if (!dd.postits || dd.postits.length === 0) return;
   state.navIndex =
-    (((state.navIndex + dir) % dd.postits.length) + dd.postits.length) %
-    dd.postits.length;
+      (((state.navIndex + dir) % dd.postits.length) + dd.postits.length) %
+      dd.postits.length;
   updateNavBar();
   centerOnPostit(dd.postits[state.navIndex], true);
 }
 
-// hook renderMap to refresh nav bar and (re)center on first postit on day change
 const _origRenderMap = renderMap;
 renderMap = function () {
   _origRenderMap();
   updateNavBar();
 };
 
-// keyboard arrows for nav
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key === "e") {
     e.preventDefault();
@@ -1109,8 +1120,8 @@ document.addEventListener("keydown", (e) => {
     return;
   }
   const mapActive = document
-    .getElementById("map-view")
-    .classList.contains("active");
+      .getElementById("map-view")
+      .classList.contains("active");
   if (!mapActive) return;
   if (e.key === "ArrowRight") navPostit(1);
   if (e.key === "ArrowLeft") navPostit(-1);
@@ -1118,3 +1129,190 @@ document.addEventListener("keydown", (e) => {
 
 initTheme();
 initSidebar();
+
+// ==========================================
+// FUNZIONI NUOVE: AGENDA E TIMERS
+// ==========================================
+
+function renderAgenda() {
+  const list = document.getElementById("agenda-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const dd = dayData();
+
+  // 96 iterazioni: una ogni 15 minuti (24 * 4)
+  for (let i = 0; i < 96; i++) {
+    // Inizializza l'indice se non esiste
+    if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
+    const hourData = dd.agenda[i];
+
+    // Calcolo ora e minuti per l'etichetta
+    const h = Math.floor(i / 4);
+    const m = (i % 4) * 15;
+    const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+
+    const row = document.createElement("div");
+    row.className = "agenda-row";
+    row.id = "agenda-row-" + i; // ID fondamentale per lo scrolling
+
+    const timeSpan = document.createElement("span");
+    timeSpan.className = "agenda-time";
+    timeSpan.textContent = timeStr;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "agenda-input";
+    input.placeholder = "..........";
+    input.value = hourData.text;
+    input.oninput = (e) => {
+      dd.agenda[i].text = e.target.value;
+      saveMap();
+    };
+
+    const clock = document.createElement("button");
+    clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
+    clock.innerHTML = "⏰";
+    clock.onclick = () => {
+      dd.agenda[i].alarm = !dd.agenda[i].alarm;
+      dd.agenda[i].snoozeUntil = null;
+      saveMap();
+      renderAgenda();
+    };
+
+    row.appendChild(timeSpan);
+    row.appendChild(input);
+    row.appendChild(clock);
+    list.appendChild(row);
+  }
+}
+
+function scrollToCurrentTime() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMin = now.getMinutes();
+
+  // Trova l'indice del quarto d'ora più vicino
+  const index = (currentHour * 4) + Math.floor(currentMin / 15);
+
+  const targetRow = document.getElementById("agenda-row-" + index);
+  if (targetRow) {
+    // Il timeout assicura che il browser abbia finito di renderizzare la lista
+    setTimeout(() => {
+      targetRow.scrollIntoView({
+        behavior: "smooth",
+        block: "center" // Centra lo slot nello schermo
+      });
+
+      // Feedback visivo temporaneo
+      targetRow.style.transition = "background-color 0.5s";
+      targetRow.style.backgroundColor = "var(--today-color)";
+      setTimeout(() => {
+        targetRow.style.backgroundColor = "";
+      }, 2000);
+    }, 50);
+  }
+}
+
+// ── Motore Timer / Sveglie (controlla ogni 10 secondi) ──
+let activeAlarm = null;
+setInterval(checkAlarms, 10000);
+
+function checkAlarms() {
+  if (activeAlarm) return; // Non accavallare modali
+  const now = new Date();
+
+  // Scansiona tutti i giorni salvati per trovare sveglie
+  for (const dateString in state.data) {
+    const dd = state.data[dateString];
+    if (!dd.agenda) continue;
+
+    for (let i = 0; i < 24; i++) {
+      const item = dd.agenda[i];
+      if (item && item.alarm) {
+        // Calcola l'ora esatta di innesco
+        const [y, m, d] = dateString.split("-").map(Number);
+        const targetTime = new Date(y, m - 1, d, i, 0, 0);
+
+        // Se l'orario prefissato è nel passato/presente
+        if (now >= targetTime) {
+          // Se non è stato posticipato, o il posticipo è scaduto
+          if (!item.snoozeUntil || now.getTime() >= item.snoozeUntil) {
+            showAlarmModal(dateString, i, item.text);
+            return; // Innesca un solo timer alla volta
+          }
+        }
+      }
+    }
+  }
+}
+
+function showAlarmModal(dateString, hour, text) {
+  activeAlarm = { ds: dateString, hour: hour };
+  const messageEl = document.getElementById("alarm-message");
+
+  const displayDate = (dateString === TODAY_ISO) ? "Oggi" : dateString;
+
+  messageEl.innerHTML = `<strong>Data:</strong> ${displayDate} - <strong>Ore:</strong> ${String(hour).padStart(2, "0")}:00<br><br>
+                         <i>${text || "Nessun appunto inserito per questa fascia oraria."}</i>`;
+  document.getElementById("alarm-modal").classList.remove("hidden");
+}
+
+function stopAlarm() {
+  if (activeAlarm) {
+    const { ds, hour } = activeAlarm;
+    state.data[ds].agenda[hour].alarm = false; // Disattiva per sempre
+    saveMap();
+  }
+  closeAlarmModal();
+}
+
+function snoozeAlarm() {
+  if (activeAlarm) {
+    const { ds, hour } = activeAlarm;
+    // Posticipa esattamente di 5 minuti (5 * 60 * 1000 ms)
+    state.data[ds].agenda[hour].snoozeUntil = Date.now() + 5 * 60 * 1000;
+    saveMap();
+  }
+  closeAlarmModal();
+}
+
+function goToAlarm() {
+  if (activeAlarm) {
+    const { ds, hour } = activeAlarm;
+
+    // Disattiva allarme e sposta l'app a quel giorno
+    state.currentDay = ds;
+    state.viewDate = new Date(ds);
+    state.data[ds].agenda[hour].alarm = false;
+    saveMap();
+
+    renderDays(true);
+    loadDay();
+
+    // Spostati sul tab agenda
+    const tabAgenda = document.querySelector('.nav-tab[onclick*="agenda"]');
+    switchView("agenda", tabAgenda);
+
+    // Scroll fluido fino a quella riga e "flash" visivo
+    setTimeout(() => {
+      const row = document.getElementById("agenda-row-" + hour);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.style.background = "var(--md-primary)";
+        setTimeout(() => {
+          row.style.background = "var(--md-surface)";
+        }, 600);
+      }
+    }, 200);
+  }
+  closeAlarmModal();
+}
+
+function closeAlarmModal() {
+  activeAlarm = null;
+  document.getElementById("alarm-modal").classList.add("hidden");
+  // Aggiorna l'UI se siamo sulla vista agenda (per spegnere l'icona della sveglia)
+  if (document.getElementById("agenda-view").classList.contains("active")) {
+    renderAgenda();
+  }
+}

@@ -10,6 +10,7 @@
   --md-canvas-dots: rgb(30, 30, 17, 0.3);
   --font-main: "Poppins", sans-serif;
   --today-color: rgba(220, 220, 255, 0.85);
+  --alarm-color: #d32f2f; /* NUOVO: Colore allarme chiaro */
 }
 html[data-theme="dark"] {
   --md-primary: #4f2e80;
@@ -26,6 +27,7 @@ html[data-theme="dark"] {
   --control-bg: rgba(248, 248, 242, 0.08);
   --control-border: rgba(248, 248, 242, 0.14);
   --overlay-bg: rgba(42, 38, 61, 0.96);
+  --alarm-color: #ff5252; /* NUOVO: Colore allarme scuro */
 }
 * {
   box-sizing: border-box;
@@ -78,8 +80,8 @@ textarea,
   font-size: 18px;
   cursor: pointer;
   transition:
-    background 0.15s,
-    transform 0.1s;
+          background 0.15s,
+          transform 0.1s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -111,8 +113,8 @@ html[data-theme="dark"] .theme-toggle:hover {
   font-size: 18px;
   cursor: pointer;
   transition:
-    background 0.15s,
-    transform 0.1s;
+          background 0.15s,
+          transform 0.1s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -391,8 +393,8 @@ html[data-theme="dark"] .import-btn-confirm {
   min-width: 0;
   max-width: 500px;
   transition:
-    width 0.2s ease,
-    border-color 0.2s ease;
+          width 0.2s ease,
+          border-color 0.2s ease;
   border-right: 1px solid var(--md-border);
   overflow: hidden;
 }
@@ -527,8 +529,8 @@ html[data-theme="dark"] .day-item.is-today {
   flex-shrink: 0;
   cursor: pointer;
   transition:
-    transform 0.15s,
-    opacity 0.15s;
+          transform 0.15s,
+          opacity 0.15s;
   border: 1px solid transparent;
 }
 .day-dot:hover {
@@ -694,8 +696,8 @@ html[data-theme="dark"] .day-item.weekend span {
   fill: none;
   pointer-events: none;
   transition:
-    stroke 0.15s,
-    stroke-width 0.15s;
+          stroke 0.15s,
+          stroke-width 0.15s;
 }
 .arrow-hit {
   stroke: transparent;
@@ -744,8 +746,8 @@ html[data-theme="dark"] .day-item.weekend span {
   align-items: center;
   justify-content: center;
   transition:
-    background 0.15s,
-    transform 0.1s;
+          background 0.15s,
+          transform 0.1s;
 }
 .zoom-btn:active {
   transform: scale(0.92);
@@ -890,8 +892,8 @@ html[data-theme="dark"] .btn-export:active {
   pointer-events: none;
   z-index: 99999;
   transition:
-    opacity 0.2s,
-    transform 0.2s;
+          opacity 0.2s,
+          transform 0.2s;
 }
 #save-toast.show {
   opacity: 1;
@@ -938,8 +940,8 @@ html[data-theme="dark"] .btn-export:active {
   border: 2px solid transparent;
   cursor: pointer;
   transition:
-    transform 0.12s,
-    border-color 0.12s;
+          transform 0.12s,
+          border-color 0.12s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1047,8 +1049,8 @@ html[data-theme="dark"] .btn-export:active {
   align-items: center;
   justify-content: center;
   transition:
-    background 0.15s,
-    transform 0.1s;
+          background 0.15s,
+          transform 0.1s;
   flex-shrink: 0;
 }
 .nav-arrow:active {
@@ -1060,4 +1062,108 @@ html[data-theme="dark"] .btn-export:active {
   min-width: 60px;
   text-align: center;
   font-family: var(--font-main);
+}
+
+/* ========================================= */
+/* NUOVE REGOLE AGENDA E MODALE TIMER        */
+/* ========================================= */
+
+.agenda-row {
+  display: flex;
+  align-items: center;
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  gap: 16px;
+  transition: background 0.2s;
+}
+.agenda-time {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--md-on-surface);
+  min-width: 55px;
+  text-align: right;
+}
+.agenda-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--md-on-surface);
+  font-family: var(--font-main);
+  font-size: 15px;
+  outline: none;
+  padding: 4px 0;
+}
+.agenda-input::placeholder {
+  color: var(--text-muted);
+}
+.agenda-clock-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  opacity: 0.3;
+  transition: all 0.2s;
+  padding: 4px;
+}
+.agenda-clock-btn:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+.agenda-clock-btn.active {
+  opacity: 1;
+  text-shadow: 0 0 10px var(--alarm-color);
+  /* Per assicurarci che l'emoji sembri "accesa" usiamo un leggero bagliore */
+}
+
+/* Modal Timer Lampeggiante */
+.alarm-modal-card {
+  background: var(--md-surface);
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  color: var(--md-on-surface);
+  /* Animazione lampeggio */
+  animation: blinkBorder 1s infinite alternate;
+}
+
+@keyframes blinkBorder {
+  0% { box-shadow: 0 0 10px var(--alarm-color); border: 2px solid transparent; }
+  100% { box-shadow: 0 0 40px var(--alarm-color); border: 2px solid var(--alarm-color); }
+}
+
+.alarm-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.alarm-btns button {
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-weight: 600;
+  transition: transform 0.1s;
+}
+.alarm-btns button:active {
+  transform: scale(0.95);
+}
+
+.btn-spegni {
+  background: var(--control-bg);
+  color: var(--md-on-surface);
+  border: 1px solid var(--md-border);
+}
+.btn-posticipa {
+  background: #fbc02d;
+  color: #000;
+}
+.btn-vai {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
