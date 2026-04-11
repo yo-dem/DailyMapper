@@ -463,7 +463,7 @@ html[data-theme="dark"] .sidebar-expander:hover {
   display: block;
   width: 100%;
   height: 1063px; /* PAGE_HEIGHT - PADDING*2 = 1123 - 60 */
-  padding: 30px;
+  padding: 80px;
   border: none;
   outline: none;
   resize: none;
