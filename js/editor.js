@@ -1,13 +1,20 @@
 // ── Editor a pagine fisse A4 ──────────────────────────────────────────────────
-// Ogni foglio è una <textarea> di altezza fissa (A4).
-// scrollHeight > clientHeight → testo in overflow → nuova pagina.
-// Ad ogni input si raccoglie tutto il testo, si redistribuisce su tutti
-// i fogli e si riposiziona il cursore nel punto giusto.
+// La paginazione è basata sul conteggio righe, non su scrollHeight,
+// per evitare dipendenze dal reflow sincrono del browser.
 
-const PAGE_HEIGHT  = 1123;
-const PAGE_PADDING = 30;
+let _pages = [];      // array di HTMLTextAreaElement
+let _linesPerPage = 0; // calcolato una volta sola dopo il primo render
 
-let _pages = []; // array di HTMLTextAreaElement
+// ── Righe per pagina ──────────────────────────────────────────────────────────
+
+function _calcLinesPerPage() {
+  if (_pages.length === 0) return 40;
+  const ta = _pages[0];
+  const style = window.getComputedStyle(ta);
+  const lineH = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.6;
+  const innerH = ta.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+  return Math.max(1, Math.floor(innerH / lineH));
+}
 
 // ── Testo completo ────────────────────────────────────────────────────────────
 
@@ -15,24 +22,13 @@ function _fullText() {
   return _pages.map(ta => ta.value).join("\n");
 }
 
-// ── Overflow check ────────────────────────────────────────────────────────────
-
-function _overflows(ta) {
-  return ta.scrollHeight > ta.clientHeight + 1;
-}
-
 // ── Gestione fogli ────────────────────────────────────────────────────────────
-
-function _createTextarea() {
-  const ta = document.createElement("textarea");
-  ta.spellcheck = false;
-  ta.setAttribute("autocomplete", "off");
-  return ta;
-}
 
 function _addSheet() {
   const bg = document.getElementById("editor-bg");
-  const ta = _createTextarea();
+  const ta = document.createElement("textarea");
+  ta.spellcheck = false;
+  ta.setAttribute("autocomplete", "off");
   const sheet = document.createElement("div");
   sheet.className = "editor-page-sheet";
   sheet.appendChild(ta);
@@ -49,78 +45,56 @@ function _removeLastSheet() {
   ta.parentElement.remove();
 }
 
-// ── Redistribuzione completa ──────────────────────────────────────────────────
-// Riceve il testo completo e lo distribuisce sui fogli necessari.
-// Restituisce { pageIdx, cursorPos } dove il cursore deve andare dopo.
+// ── Distribuzione per righe ───────────────────────────────────────────────────
 
-function _redistribute(fullText, anchorText, anchorOffset) {
-  // Porta tutto sul primo foglio
-  while (_pages.length > 1) _removeLastSheet();
-  _pages[0].value = fullText;
+function _distribute(fullText, anchorOffset) {
+  const lpp = _linesPerPage || _calcLinesPerPage();
 
-  // Propaga l'overflow pagina per pagina
-  let p = 0;
-  while (p < _pages.length) {
-    const ta = _pages[p];
-    if (_overflows(ta)) {
-      // Assicurati che esista la pagina successiva
-      if (p + 1 >= _pages.length) _addSheet();
-      const next = _pages[p + 1];
+  // Spezza il testo in righe fisiche (rispettando i \n espliciti)
+  const lines = fullText.split("\n");
 
-      // Sposta righe in eccesso alla pagina successiva, una alla volta
-      while (_overflows(ta)) {
-        const text = ta.value;
-        const cut = text.lastIndexOf("\n");
-        if (cut === -1) {
-          // Riga unica lunghissima: spezza per caratteri
-          const half = Math.floor(text.length / 2);
-          ta.value   = text.slice(0, half);
-          next.value = text.slice(half) + (next.value ? "\n" + next.value : "");
-        } else {
-          ta.value   = text.slice(0, cut);
-          next.value = text.slice(cut + 1) + (next.value ? "\n" + next.value : "");
-        }
-      }
-      p++;
-    } else {
-      // Nessun overflow su questa pagina: le successive non ne avranno
-      // (il testo è già tutto qui); rimuovi pagine vuote in coda
-      while (_pages.length > p + 1) _removeLastSheet();
-      break;
-    }
+  // Raggruppa in blocchi da lpp righe
+  const chunks = [];
+  for (let i = 0; i < lines.length; i += lpp) {
+    chunks.push(lines.slice(i, i + lpp).join("\n"));
   }
+  if (chunks.length === 0) chunks.push("");
 
-  // Trova dove rimettere il cursore: cerca la pagina che contiene
-  // i caratteri immediatamente prima di anchorOffset nel testo originale
-  if (anchorText === null) return;
+  // Aggiusta il numero di fogli
+  while (_pages.length < chunks.length) _addSheet();
+  while (_pages.length > chunks.length && _pages.length > 1) _removeLastSheet();
 
-  let remaining = anchorOffset;
+  // Assegna il testo a ogni foglio
+  chunks.forEach((chunk, i) => {
+    if (_pages[i].value !== chunk) _pages[i].value = chunk;
+  });
+
+  // Ripristina cursore
+  if (anchorOffset === null) return;
+  let rem = anchorOffset;
   for (let i = 0; i < _pages.length; i++) {
-    const len = _pages[i].value.length + 1; // +1 per il \n di separazione
-    if (remaining <= _pages[i].value.length || i === _pages.length - 1) {
+    const pageLen = _pages[i].value.length;
+    const isLast = i === _pages.length - 1;
+    if (rem <= pageLen || isLast) {
       _pages[i].focus();
-      _pages[i].selectionStart = _pages[i].selectionEnd = Math.min(remaining, _pages[i].value.length);
+      _pages[i].selectionStart = _pages[i].selectionEnd = Math.min(rem, pageLen);
       return;
     }
-    remaining -= len;
+    rem -= pageLen + 1; // +1 per il \n tra pagine
   }
 }
 
-// ── Handler input ─────────────────────────────────────────────────────────────
+// ── Input ─────────────────────────────────────────────────────────────────────
 
 function _onInput(ta) {
   const idx = _pages.indexOf(ta);
-
-  // Posizione cursore nel testo globale
-  const cursorPos = _pages.slice(0, idx).reduce((acc, t) => acc + t.value.length + 1, 0)
-                  + ta.selectionStart;
-
-  const full = _fullText();
-  _redistribute(full, ta, cursorPos);
+  const cursorPos = _pages.slice(0, idx)
+    .reduce((acc, t) => acc + t.value.length + 1, 0) + ta.selectionStart;
+  _distribute(_fullText(), cursorPos);
   _saveText();
 }
 
-// ── Navigazione tra fogli con tastiera ───────────────────────────────────────
+// ── Tastiera ──────────────────────────────────────────────────────────────────
 
 function _onKeydown(e, ta) {
   const idx = _pages.indexOf(ta);
@@ -164,18 +138,22 @@ function initEditor() {
   if (!bg) return;
   _pages.forEach(ta => ta.parentElement && ta.parentElement.remove());
   _pages = [];
+  _linesPerPage = 0;
   _addSheet();
+  // Calcola linesPerPage dopo che il DOM è pronto
+  requestAnimationFrame(() => {
+    _linesPerPage = _calcLinesPerPage();
+  });
 }
 
-// ── Carica testo del giorno corrente ─────────────────────────────────────────
+// ── Carica giorno ─────────────────────────────────────────────────────────────
 
 function loadDay() {
   if (_pages.length === 0) initEditor();
-
   const text = dayData().notes || "";
-  _redistribute(text, null, 0);
-
+  // Assicura che linesPerPage sia calcolato prima di distribuire
+  if (!_linesPerPage) _linesPerPage = _calcLinesPerPage();
+  _distribute(text, null);
   if (document.getElementById("map-view").classList.contains("active")) renderMap();
   if (document.getElementById("agenda-view").classList.contains("active")) renderAgenda();
 }
-
