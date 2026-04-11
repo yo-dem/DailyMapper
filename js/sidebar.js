@@ -1,12 +1,26 @@
 // ── Larghezza sidebar ─────────────────────────────────────────────────────────
 let sidebarWidth = parseInt(localStorage.getItem(SIDEBAR_KEY) || "320");
 
+const SIDEBAR_COLLAPSE_BREAKPOINT = 700; // px
+
+function _autoCollapseSidebar() {
+  if (window.innerWidth < SIDEBAR_COLLAPSE_BREAKPOINT && sidebarWidth > 0) {
+    sidebarWidth = 0;
+    document.getElementById("sidebar").style.width = "0px";
+    updateSidebarContentVisibility();
+    // non salviamo in localStorage: è un collapse automatico, non scelta utente
+  }
+}
+
 function initSidebar() {
   const sidebar = document.getElementById("sidebar");
   const expander = document.getElementById("sidebar-expander");
 
   sidebar.style.width = sidebarWidth + "px";
   updateSidebarContentVisibility();
+  _autoCollapseSidebar();
+
+  window.addEventListener("resize", _autoCollapseSidebar);
 
   expander.addEventListener("click", () => {
     const sidebar = document.getElementById("sidebar");

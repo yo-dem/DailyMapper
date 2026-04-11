@@ -1,6 +1,7 @@
 // ── Inizializzazione ──────────────────────────────────────────────────────────
 initTheme();
 initSidebar();
+initEditor();
 renderDays(true);
 loadDay();
 applyXform();
