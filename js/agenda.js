@@ -3,11 +3,11 @@
 // La granularità cambia solo quanti slot vengono visualizzati.
 const GRANULARITY_KEY = "dm_v3_agenda_granularity";
 const GRANULARITY_OPTIONS = [
-  { label: "1 ora",   minutes: 60 },
-  { label: "30 min",  minutes: 30 },
-  { label: "15 min",  minutes: 15 },
-  { label: "10 min",  minutes: 10 },
-  { label: "5 min",   minutes:  5 },
+  { label: "1h",   minutes: 60 },
+  { label: "30m",  minutes: 30 },
+  { label: "15m",  minutes: 15 },
+  { label: "10m",  minutes: 10 },
+  { label: "5m",   minutes:  5 },
 ];
 
 // Step in unità di slot (ogni slot = 5 min)
@@ -33,20 +33,9 @@ function setAgendaGranularity(minutes) {
 
 // ── Toolbar granularità ───────────────────────────────────────────────────────
 function renderGranularityToolbar() {
-  let toolbar = document.getElementById("agenda-granularity-toolbar");
-  if (!toolbar) {
-    const wrapper = document.querySelector("#agenda-view > div");
-    toolbar = document.createElement("div");
-    toolbar.id = "agenda-granularity-toolbar";
-    toolbar.className = "agenda-granularity-toolbar";
-    wrapper.insertBefore(toolbar, wrapper.firstChild);
-  }
+  const toolbar = document.getElementById("agenda-granularity-toolbar");
+  if (!toolbar) return;
   toolbar.innerHTML = "";
-
-  const label = document.createElement("span");
-  label.className = "agenda-gran-label";
-  label.textContent = "Granularità:";
-  toolbar.appendChild(label);
 
   GRANULARITY_OPTIONS.forEach(({ label: lbl, minutes }) => {
     const btn = document.createElement("button");
@@ -69,12 +58,19 @@ function renderAgenda() {
   const dd = dayData();
   const step = granularityStep();
 
+  // Slot corrente (solo rilevante se il giorno visualizzato è oggi)
+  const isToday = state.currentDay === TODAY_ISO;
+  const now = new Date();
+  const currentSlot = now.getHours() * 12 + Math.floor(now.getMinutes() / 5);
+
   for (let i = 0; i < 288; i += step) {
     if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
     const hourData = dd.agenda[i];
     const h = Math.floor(i / 12);
     const m = (i % 12) * 5;
     const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+
+    const isPast = isToday && i < currentSlot;
 
     const row = document.createElement("div");
     row.className = "agenda-row";
@@ -94,19 +90,22 @@ function renderAgenda() {
       saveMap();
     };
 
-    const clock = document.createElement("button");
-    clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
-    clock.innerHTML = "⏰";
-    clock.onclick = () => {
-      dd.agenda[i].alarm = !dd.agenda[i].alarm;
-      dd.agenda[i].snoozeUntil = null;
-      saveMap();
-      renderAgenda();
-    };
-
     row.appendChild(timeSpan);
     row.appendChild(textarea);
-    row.appendChild(clock);
+
+    if (!isPast) {
+      const clock = document.createElement("button");
+      clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
+      clock.innerHTML = "⏰";
+      clock.onclick = () => {
+        dd.agenda[i].alarm = !dd.agenda[i].alarm;
+        dd.agenda[i].snoozeUntil = null;
+        saveMap();
+        renderAgenda();
+      };
+      row.appendChild(clock);
+    }
+
     list.appendChild(row);
   }
 }
