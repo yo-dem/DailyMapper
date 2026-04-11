@@ -1,0 +1,261 @@
+// ── Granularità agenda ────────────────────────────────────────────────────────
+// I dati sono sempre indicizzati ogni 5 minuti (288 slot = 24h).
+// La granularità cambia solo quanti slot vengono visualizzati.
+const GRANULARITY_KEY = "dm_v3_agenda_granularity";
+const GRANULARITY_OPTIONS = [
+  { label: "1 ora",   minutes: 60 },
+  { label: "30 min",  minutes: 30 },
+  { label: "15 min",  minutes: 15 },
+  { label: "10 min",  minutes: 10 },
+  { label: "5 min",   minutes:  5 },
+];
+
+// Step in unità di slot (ogni slot = 5 min)
+function granularityStep() {
+  return state.agendaGranularity / 5;
+}
+
+// Inizializza la granularità dallo storage, default 60 min
+function initAgendaGranularity() {
+  if (state.agendaGranularity) return; // già inizializzata
+  const saved = parseInt(localStorage.getItem(GRANULARITY_KEY) || "60");
+  state.agendaGranularity = GRANULARITY_OPTIONS.some((o) => o.minutes === saved)
+    ? saved
+    : 60;
+}
+
+function setAgendaGranularity(minutes) {
+  state.agendaGranularity = minutes;
+  localStorage.setItem(GRANULARITY_KEY, minutes);
+  renderAgenda();
+  scrollToCurrentTime();
+}
+
+// ── Toolbar granularità ───────────────────────────────────────────────────────
+function renderGranularityToolbar() {
+  let toolbar = document.getElementById("agenda-granularity-toolbar");
+  if (!toolbar) {
+    const wrapper = document.querySelector("#agenda-view > div");
+    toolbar = document.createElement("div");
+    toolbar.id = "agenda-granularity-toolbar";
+    toolbar.className = "agenda-granularity-toolbar";
+    wrapper.insertBefore(toolbar, wrapper.firstChild);
+  }
+  toolbar.innerHTML = "";
+
+  const label = document.createElement("span");
+  label.className = "agenda-gran-label";
+  label.textContent = "Granularità:";
+  toolbar.appendChild(label);
+
+  GRANULARITY_OPTIONS.forEach(({ label: lbl, minutes }) => {
+    const btn = document.createElement("button");
+    btn.className =
+      "agenda-gran-btn" + (state.agendaGranularity === minutes ? " active" : "");
+    btn.textContent = lbl;
+    btn.onclick = () => setAgendaGranularity(minutes);
+    toolbar.appendChild(btn);
+  });
+}
+
+// ── Rendering agenda ──────────────────────────────────────────────────────────
+function renderAgenda() {
+  initAgendaGranularity();
+  renderGranularityToolbar();
+
+  const list = document.getElementById("agenda-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const dd = dayData();
+  const step = granularityStep();
+
+  for (let i = 0; i < 288; i += step) {
+    if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
+    const hourData = dd.agenda[i];
+    const h = Math.floor(i / 12);
+    const m = (i % 12) * 5;
+    const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+
+    const row = document.createElement("div");
+    row.className = "agenda-row";
+    row.id = "agenda-row-" + i;
+
+    const timeSpan = document.createElement("span");
+    timeSpan.className = "agenda-time";
+    timeSpan.textContent = timeStr;
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "agenda-input";
+    textarea.placeholder = "...";
+    textarea.rows = 2;
+    textarea.value = hourData.text;
+    textarea.oninput = (e) => {
+      dd.agenda[i].text = e.target.value;
+      saveMap();
+    };
+
+    const clock = document.createElement("button");
+    clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
+    clock.innerHTML = "⏰";
+    clock.onclick = () => {
+      dd.agenda[i].alarm = !dd.agenda[i].alarm;
+      dd.agenda[i].snoozeUntil = null;
+      saveMap();
+      renderAgenda();
+    };
+
+    row.appendChild(timeSpan);
+    row.appendChild(textarea);
+    row.appendChild(clock);
+    list.appendChild(row);
+  }
+}
+
+// ── Scroll all'ora corrente ───────────────────────────────────────────────────
+function scrollToCurrentTime() {
+  const now = new Date();
+  const step = granularityStep();
+  const rawIndex = now.getHours() * 12 + Math.floor(now.getMinutes() / 5);
+  const snappedIndex = Math.floor(rawIndex / step) * step;
+  const targetRow = document.getElementById("agenda-row-" + snappedIndex);
+  if (targetRow) {
+    setTimeout(() => {
+      targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+      targetRow.style.transition = "background-color 0.5s";
+      targetRow.style.backgroundColor = "var(--today-color)";
+      setTimeout(() => (targetRow.style.backgroundColor = ""), 2000);
+    }, 50);
+  }
+}
+
+// ── Motore audio (Web Audio API) ──────────────────────────────────────────────
+let audioCtx;
+let alarmInterval;
+
+function playAlarmSound() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+
+  const playBeep = () => {
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  };
+
+  playBeep();
+  alarmInterval = setInterval(playBeep, 1000);
+}
+
+function stopAlarmSound() {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+}
+
+// ── Motore allarmi (controllo ogni 10 secondi) ────────────────────────────────
+// Itera sempre tutti i 288 slot a 5 min: gli allarmi funzionano
+// indipendentemente dalla granularità di visualizzazione scelta.
+let activeAlarm = null;
+setInterval(checkAlarms, 10000);
+
+function checkAlarms() {
+  if (activeAlarm) return;
+  const now = new Date();
+
+  for (const dateString in state.data) {
+    const dd = state.data[dateString];
+    if (!dd.agenda) continue;
+
+    for (let i = 0; i < 288; i++) {
+      const item = dd.agenda[i];
+      if (item && item.alarm) {
+        const h = Math.floor(i / 12);
+        const m = (i % 12) * 5;
+        const [y, month, d] = dateString.split("-").map(Number);
+        const targetTime = new Date(y, month - 1, d, h, m, 0);
+
+        if (now >= targetTime) {
+          if (!item.snoozeUntil || now.getTime() >= item.snoozeUntil) {
+            showAlarmModal(dateString, i, h, m, item.text);
+            return;
+          }
+        }
+      }
+    }
+  }
+}
+
+function showAlarmModal(dateString, index, h, m, text) {
+  activeAlarm = { ds: dateString, index };
+  const messageEl = document.getElementById("alarm-message");
+  const modalEl = document.getElementById("alarm-modal");
+  const displayDate = dateString === TODAY_ISO ? "Oggi" : dateString;
+  const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  messageEl.innerHTML = `<strong>Data:</strong> ${displayDate} - <strong>Ore:</strong> ${timeStr}<br><br>
+                         <i>${text || "Nessun appunto inserito."}</i>`;
+  modalEl.classList.remove("hidden");
+  modalEl.classList.add("flashing-overlay");
+  playAlarmSound();
+}
+
+function stopAlarm() {
+  if (activeAlarm) {
+    const { ds, index } = activeAlarm;
+    state.data[ds].agenda[index].alarm = false;
+    saveMap();
+  }
+  closeAlarmModal();
+}
+
+function snoozeAlarm() {
+  if (activeAlarm) {
+    const { ds, index } = activeAlarm;
+    state.data[ds].agenda[index].snoozeUntil = Date.now() + 5 * 60 * 1000;
+    saveMap();
+  }
+  closeAlarmModal();
+}
+
+function goToAlarm() {
+  if (activeAlarm) {
+    const { ds, index } = activeAlarm;
+    state.currentDay = ds;
+    state.viewDate = new Date(ds);
+    state.data[ds].agenda[index].alarm = false;
+    saveMap();
+    renderDays(true);
+    loadDay();
+    const tabAgenda = document.querySelector('.nav-tab[onclick*="agenda"]');
+    switchView("agenda", tabAgenda);
+    setTimeout(() => {
+      const step = granularityStep();
+      const snappedIndex = Math.floor(index / step) * step;
+      const row = document.getElementById("agenda-row-" + snappedIndex);
+      if (row) {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.style.background = "var(--md-primary)";
+        setTimeout(() => { row.style.background = "var(--md-surface)"; }, 800);
+      }
+    }, 200);
+  }
+  closeAlarmModal();
+}
+
+function closeAlarmModal() {
+  activeAlarm = null;
+  const modalEl = document.getElementById("alarm-modal");
+  modalEl.classList.add("hidden");
+  modalEl.classList.remove("flashing-overlay");
+  stopAlarmSound();
+  if (document.getElementById("agenda-view").classList.contains("active")) {
+    renderAgenda();
+  }
+}

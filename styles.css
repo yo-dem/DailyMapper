@@ -553,6 +553,14 @@ html[data-theme="dark"] .day-dot.has-map {
   background: #4db6ac;
   opacity: 0.9;
 }
+.day-dot.has-agenda {
+  background: #e65100;
+  opacity: 0.8;
+}
+html[data-theme="dark"] .day-dot.has-agenda {
+  background: #ff8a65;
+  opacity: 0.9;
+}
 .view {
   display: none;
   flex: 1;
@@ -1068,22 +1076,59 @@ html[data-theme="dark"] .btn-export:active {
 /* NUOVE REGOLE AGENDA E MODALE TIMER        */
 /* ========================================= */
 
-.agenda-row {
+/* ── Toolbar granularità ── */
+.agenda-granularity-toolbar {
   display: flex;
   align-items: center;
+  gap: 8px;
+  padding: 10px 4px 18px;
+  flex-wrap: wrap;
+}
+.agenda-gran-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.agenda-gran-btn {
+  background: var(--md-surface);
+  border: 1px solid var(--md-border);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-family: var(--font-main);
+  color: var(--md-on-surface);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.agenda-gran-btn:hover {
+  border-color: var(--md-primary);
+  color: var(--md-primary);
+}
+.agenda-gran-btn.active {
+  background: var(--md-primary);
+  border-color: var(--md-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Righe agenda ── */
+.agenda-row {
+  display: flex;
+  align-items: flex-start;
   background: var(--md-surface);
   border: 1px solid var(--md-border);
   border-radius: 10px;
-  padding: 10px 16px;
+  padding: 12px 16px;
   gap: 16px;
   transition: background 0.2s;
 }
 .agenda-time {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--md-on-surface);
   min-width: 55px;
   text-align: right;
+  padding-top: 6px;
 }
 .agenda-input {
   flex: 1;
@@ -1094,6 +1139,9 @@ html[data-theme="dark"] .btn-export:active {
   font-size: 15px;
   outline: none;
   padding: 4px 0;
+  resize: none;
+  line-height: 1.5;
+  overflow: hidden;
 }
 .agenda-input::placeholder {
   color: var(--text-muted);
@@ -1106,6 +1154,8 @@ html[data-theme="dark"] .btn-export:active {
   opacity: 0.3;
   transition: all 0.2s;
   padding: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 .agenda-clock-btn:hover {
   opacity: 0.8;
@@ -1114,7 +1164,6 @@ html[data-theme="dark"] .btn-export:active {
 .agenda-clock-btn.active {
   opacity: 1;
   text-shadow: 0 0 10px var(--alarm-color);
-  /* Per assicurarci che l'emoji sembri "accesa" usiamo un leggero bagliore */
 }
 
 /* Modal Timer Lampeggiante */
