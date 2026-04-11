@@ -280,10 +280,24 @@ function renderDays(scrollToActive = false) {
     item.appendChild(dayNum);
     item.appendChild(dayName);
     item.appendChild(indicators);
-    item.onclick = () => {
+    item.onclick = (e) => {
+      const now = Date.now();
+      const last = state.lastTapTime || 0;
+      const lastDay = state.lastTapDay || "";
+      const isDoubleTap = (now - last < 300) && (lastDay === ds);
+
+      state.lastTapTime = now;
+      state.lastTapDay = ds;
+
       state.currentDay = ds;
       renderDays(false);
       loadDay();
+
+      // Al doppio tap/click, passa direttamente all'Agenda
+      if (isDoubleTap) {
+        const tabAgenda = document.querySelector('.nav-tab[onclick*="agenda"]');
+        switchView("agenda", tabAgenda);
+      }
     };
     list.appendChild(item);
     if (ds === state.currentDay) activeEl = item;
@@ -1140,20 +1154,19 @@ function renderAgenda() {
   list.innerHTML = "";
   const dd = dayData();
 
-  // 96 iterazioni: una ogni 15 minuti (24 * 4)
-  for (let i = 0; i < 96; i++) {
-    // Inizializza l'indice se non esiste
+  // 288 iterazioni: una ogni 5 minuti (24 * 12)
+  for (let i = 0; i < 288; i++) {
     if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
     const hourData = dd.agenda[i];
 
-    // Calcolo ora e minuti per l'etichetta
-    const h = Math.floor(i / 4);
-    const m = (i % 4) * 15;
+    // Calcolo ora e minuti per l'etichetta (ogni 5 minuti)
+    const h = Math.floor(i / 12);
+    const m = (i % 12) * 5;
     const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 
     const row = document.createElement("div");
     row.className = "agenda-row";
-    row.id = "agenda-row-" + i; // ID fondamentale per lo scrolling
+    row.id = "agenda-row-" + i;
 
     const timeSpan = document.createElement("span");
     timeSpan.className = "agenda-time";
@@ -1191,25 +1204,53 @@ function scrollToCurrentTime() {
   const currentHour = now.getHours();
   const currentMin = now.getMinutes();
 
-  // Trova l'indice del quarto d'ora più vicino
-  const index = (currentHour * 4) + Math.floor(currentMin / 15);
+  // Trova l'indice del blocco di 5 minuti più vicino
+  const index = (currentHour * 12) + Math.floor(currentMin / 5);
 
   const targetRow = document.getElementById("agenda-row-" + index);
   if (targetRow) {
-    // Il timeout assicura che il browser abbia finito di renderizzare la lista
     setTimeout(() => {
-      targetRow.scrollIntoView({
-        behavior: "smooth",
-        block: "center" // Centra lo slot nello schermo
-      });
-
-      // Feedback visivo temporaneo
+      targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
       targetRow.style.transition = "background-color 0.5s";
       targetRow.style.backgroundColor = "var(--today-color)";
-      setTimeout(() => {
-        targetRow.style.backgroundColor = "";
-      }, 2000);
+      setTimeout(() => targetRow.style.backgroundColor = "", 2000);
     }, 50);
+  }
+}
+
+// ── Motore Audio Web API ──
+let audioCtx;
+let alarmInterval;
+
+function playAlarmSound() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const playBeep = () => {
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = 'sine'; // Suono morbido, cambia in 'square' per un suono più acuto
+    osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Frequenza (Nota La)
+
+    // Fade out per evitare "click" audio
+    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
+  };
+
+  playBeep();
+  // Ripeti il bip ogni secondo finché la modale è aperta
+  alarmInterval = setInterval(playBeep, 1000);
+}
+
+function stopAlarmSound() {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
   }
 }
 
@@ -1218,27 +1259,27 @@ let activeAlarm = null;
 setInterval(checkAlarms, 10000);
 
 function checkAlarms() {
-  if (activeAlarm) return; // Non accavallare modali
+  if (activeAlarm) return;
   const now = new Date();
 
-  // Scansiona tutti i giorni salvati per trovare sveglie
   for (const dateString in state.data) {
     const dd = state.data[dateString];
     if (!dd.agenda) continue;
 
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 288; i++) {
       const item = dd.agenda[i];
       if (item && item.alarm) {
-        // Calcola l'ora esatta di innesco
-        const [y, m, d] = dateString.split("-").map(Number);
-        const targetTime = new Date(y, m - 1, d, i, 0, 0);
+        const h = Math.floor(i / 12);
+        const m = (i % 12) * 5;
+        const [y, month, d] = dateString.split("-").map(Number);
 
-        // Se l'orario prefissato è nel passato/presente
+        // Calcola l'ora esatta considerando la granularità di 5 minuti
+        const targetTime = new Date(y, month - 1, d, h, m, 0);
+
         if (now >= targetTime) {
-          // Se non è stato posticipato, o il posticipo è scaduto
           if (!item.snoozeUntil || now.getTime() >= item.snoozeUntil) {
-            showAlarmModal(dateString, i, item.text);
-            return; // Innesca un solo timer alla volta
+            showAlarmModal(dateString, i, h, m, item.text);
+            return;
           }
         }
       }
@@ -1246,21 +1287,27 @@ function checkAlarms() {
   }
 }
 
-function showAlarmModal(dateString, hour, text) {
-  activeAlarm = { ds: dateString, hour: hour };
+function showAlarmModal(dateString, index, h, m, text) {
+  activeAlarm = { ds: dateString, index: index };
   const messageEl = document.getElementById("alarm-message");
+  const modalEl = document.getElementById("alarm-modal");
 
   const displayDate = (dateString === TODAY_ISO) ? "Oggi" : dateString;
+  const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
 
-  messageEl.innerHTML = `<strong>Data:</strong> ${displayDate} - <strong>Ore:</strong> ${String(hour).padStart(2, "0")}:00<br><br>
-                         <i>${text || "Nessun appunto inserito per questa fascia oraria."}</i>`;
-  document.getElementById("alarm-modal").classList.remove("hidden");
+  messageEl.innerHTML = `<strong>Data:</strong> ${displayDate} - <strong>Ore:</strong> ${timeStr}<br><br>
+                         <i>${text || "Nessun appunto inserito."}</i>`;
+
+  modalEl.classList.remove("hidden");
+  modalEl.classList.add("flashing-overlay"); // Effetto luminoso aggiuntivo
+
+  playAlarmSound();
 }
 
 function stopAlarm() {
   if (activeAlarm) {
-    const { ds, hour } = activeAlarm;
-    state.data[ds].agenda[hour].alarm = false; // Disattiva per sempre
+    const { ds, index } = activeAlarm;
+    state.data[ds].agenda[index].alarm = false;
     saveMap();
   }
   closeAlarmModal();
@@ -1268,9 +1315,8 @@ function stopAlarm() {
 
 function snoozeAlarm() {
   if (activeAlarm) {
-    const { ds, hour } = activeAlarm;
-    // Posticipa esattamente di 5 minuti (5 * 60 * 1000 ms)
-    state.data[ds].agenda[hour].snoozeUntil = Date.now() + 5 * 60 * 1000;
+    const { ds, index } = activeAlarm;
+    state.data[ds].agenda[index].snoozeUntil = Date.now() + 5 * 60 * 1000;
     saveMap();
   }
   closeAlarmModal();
@@ -1278,30 +1324,24 @@ function snoozeAlarm() {
 
 function goToAlarm() {
   if (activeAlarm) {
-    const { ds, hour } = activeAlarm;
-
-    // Disattiva allarme e sposta l'app a quel giorno
+    const { ds, index } = activeAlarm;
     state.currentDay = ds;
     state.viewDate = new Date(ds);
-    state.data[ds].agenda[hour].alarm = false;
+    state.data[ds].agenda[index].alarm = false;
     saveMap();
 
     renderDays(true);
     loadDay();
 
-    // Spostati sul tab agenda
     const tabAgenda = document.querySelector('.nav-tab[onclick*="agenda"]');
     switchView("agenda", tabAgenda);
 
-    // Scroll fluido fino a quella riga e "flash" visivo
     setTimeout(() => {
-      const row = document.getElementById("agenda-row-" + hour);
+      const row = document.getElementById("agenda-row-" + index);
       if (row) {
         row.scrollIntoView({ behavior: "smooth", block: "center" });
         row.style.background = "var(--md-primary)";
-        setTimeout(() => {
-          row.style.background = "var(--md-surface)";
-        }, 600);
+        setTimeout(() => { row.style.background = "var(--md-surface)"; }, 800);
       }
     }, 200);
   }
@@ -1310,8 +1350,12 @@ function goToAlarm() {
 
 function closeAlarmModal() {
   activeAlarm = null;
-  document.getElementById("alarm-modal").classList.add("hidden");
-  // Aggiorna l'UI se siamo sulla vista agenda (per spegnere l'icona della sveglia)
+  const modalEl = document.getElementById("alarm-modal");
+  modalEl.classList.add("hidden");
+  modalEl.classList.remove("flashing-overlay");
+
+  stopAlarmSound();
+
   if (document.getElementById("agenda-view").classList.contains("active")) {
     renderAgenda();
   }

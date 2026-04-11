@@ -1167,3 +1167,35 @@ html[data-theme="dark"] .btn-export:active {
   background: var(--md-primary);
   color: var(--md-on-primary);
 }
+
+/* ========================================= */
+/* EFFETTO LUMINOSO SVEGLIA                  */
+/* ========================================= */
+
+@keyframes pulseBackgroundLight {
+  0% { background-color: rgba(0, 0, 0, 0.35); }
+  100% { background-color: rgba(211, 47, 47, 0.25); }
+}
+
+@keyframes pulseBackgroundDark {
+  0% { background-color: rgba(9, 10, 20, 0.85); }
+  100% { background-color: rgba(255, 82, 82, 0.25); }
+}
+
+.date-modal.flashing-overlay {
+  animation: pulseBackgroundLight 1s infinite alternate ease-in-out;
+}
+
+html[data-theme="dark"] .date-modal.flashing-overlay {
+  animation: pulseBackgroundDark 1s infinite alternate ease-in-out;
+}
+
+/* Modifica la box-shadow del card per un effetto di allerta più marcato */
+@keyframes blinkBorderIntense {
+  0% { box-shadow: 0 0 10px var(--alarm-color); border: 2px solid transparent; transform: scale(1); }
+  100% { box-shadow: 0 0 50px var(--alarm-color); border: 2px solid var(--alarm-color); transform: scale(1.02); }
+}
+
+.alarm-modal-card {
+  animation: blinkBorderIntense 1s infinite alternate ease-in-out;
+}
