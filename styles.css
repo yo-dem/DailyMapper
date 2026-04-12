@@ -79,7 +79,7 @@ textarea,
   width: 40px;
   height: 40px;
   border: none;
-  border-radius: 999px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
   font-size: 18px;
