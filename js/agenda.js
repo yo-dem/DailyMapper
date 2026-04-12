@@ -26,6 +26,7 @@ function initAgendaGranularity() {
 
 function setAgendaGranularity(minutes) {
   state.agendaGranularity = minutes;
+  state.expandedHours = new Set(); // reset espansioni al cambio granularità
   localStorage.setItem(GRANULARITY_KEY, minutes);
   renderAgenda();
   scrollToCurrentTime();
@@ -52,62 +53,171 @@ function renderAgenda() {
   initAgendaGranularity();
   renderGranularityToolbar();
 
+  // Reset espansioni se cambia giorno
+  if (state.expandedHoursDay !== state.currentDay) {
+    state.expandedHours = new Set();
+    state.expandedHoursDay = state.currentDay;
+  }
+
   const list = document.getElementById("agenda-list");
   if (!list) return;
   list.innerHTML = "";
   const dd = dayData();
   const step = granularityStep();
 
-  // Slot corrente (solo rilevante se il giorno visualizzato è oggi)
   const isToday = state.currentDay === TODAY_ISO;
   const now = new Date();
   const currentSlot = now.getHours() * 12 + Math.floor(now.getMinutes() / 5);
 
+  const handledHours = new Set();
+
   for (let i = 0; i < 288; i += step) {
-    if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
-    const hourData = dd.agenda[i];
     const h = Math.floor(i / 12);
-    const m = (i % 12) * 5;
-    const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+    const isExpanded = step > 1 && state.expandedHours.has(h);
 
-    const isPast = isToday && i < currentSlot;
+    if (isExpanded) {
+      if (handledHours.has(h)) continue;
+      handledHours.add(h);
 
-    const row = document.createElement("div");
-    row.className = "agenda-row";
-    row.id = "agenda-row-" + i;
+      // Riga padre = lo slot :00 dell'ora, con pulsante collassa
+      list.appendChild(
+        _createAgendaRow(h * 12, dd, isToday, currentSlot, {
+          isSubSlot: false,
+          hour: h,
+          showExpand: false,
+          showCollapse: true,
+        })
+      );
 
-    const timeSpan = document.createElement("span");
-    timeSpan.className = "agenda-time";
-    timeSpan.textContent = timeStr;
-
-    const textarea = document.createElement("textarea");
-    textarea.className = "agenda-input";
-    textarea.placeholder = "...";
-    textarea.rows = 2;
-    textarea.value = hourData.text;
-    textarea.oninput = (e) => {
-      dd.agenda[i].text = e.target.value;
-      saveMap();
-    };
-
-    row.appendChild(timeSpan);
-    row.appendChild(textarea);
-
-    if (!isPast) {
-      const clock = document.createElement("button");
-      clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
-      clock.innerHTML = ICONS.alarm;
-      clock.onclick = () => {
-        dd.agenda[i].alarm = !dd.agenda[i].alarm;
-        dd.agenda[i].snoozeUntil = null;
-        saveMap();
-        renderAgenda();
-      };
-      row.appendChild(clock);
+      // Wrapper figli (slot :05 → :55)
+      const wrapper = document.createElement("div");
+      wrapper.className = "agenda-hour-expanded";
+      wrapper.dataset.hour = h;
+      for (let sub = h * 12 + 1; sub < (h + 1) * 12; sub++) {
+        wrapper.appendChild(
+          _createAgendaRow(sub, dd, isToday, currentSlot, {
+            isSubSlot: true,
+            hour: h,
+            showExpand: false,
+            showCollapse: false,
+          })
+        );
+      }
+      list.appendChild(wrapper);
+    } else {
+      // Solo sulle righe :00 di ogni ora viene mostrato l'expand
+      const showExpand = step > 1 && i % 12 === 0;
+      list.appendChild(
+        _createAgendaRow(i, dd, isToday, currentSlot, {
+          isSubSlot: false,
+          hour: h,
+          showExpand,
+          showCollapse: false,
+        })
+      );
     }
-
-    list.appendChild(row);
   }
+}
+
+function _createAgendaRow(i, dd, isToday, currentSlot, opts) {
+  if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
+  const hourData = dd.agenda[i];
+  const h = Math.floor(i / 12);
+  const m = (i % 12) * 5;
+  const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  const isPast = isToday && i < currentSlot;
+
+  const row = document.createElement("div");
+  row.className = "agenda-row" + (opts.isSubSlot ? " agenda-sub-row" : "");
+  row.id = "agenda-row-" + i;
+
+  const timeSpan = document.createElement("span");
+  timeSpan.className = "agenda-time";
+  timeSpan.textContent = timeStr;
+
+  const textarea = document.createElement("textarea");
+  textarea.className = "agenda-input";
+  textarea.placeholder = "...";
+  textarea.rows = 2;
+  textarea.value = hourData.text;
+  textarea.oninput = (e) => {
+    dd.agenda[i].text = e.target.value;
+    saveMap();
+  };
+
+  row.appendChild(timeSpan);
+  row.appendChild(textarea);
+
+  if (!isPast) {
+    const clock = document.createElement("button");
+    clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
+    clock.innerHTML = ICONS.alarm;
+    clock.onclick = () => {
+      dd.agenda[i].alarm = !dd.agenda[i].alarm;
+      dd.agenda[i].snoozeUntil = null;
+      saveMap();
+      renderAgenda();
+    };
+    row.appendChild(clock);
+  }
+
+  if (opts.showExpand) {
+    const btn = document.createElement("button");
+    btn.className = "agenda-expand-btn";
+    btn.innerHTML = ICONS.chevronDown;
+    btn.title = "Espandi ora";
+    btn.onclick = () => _expandHour(opts.hour);
+    row.appendChild(btn);
+  } else if (opts.showCollapse) {
+    const btn = document.createElement("button");
+    btn.className = "agenda-expand-btn agenda-expand-btn--active";
+    btn.innerHTML = ICONS.chevronUp;
+    btn.title = "Comprimi ora";
+    btn.onclick = () => _collapseHour(opts.hour);
+    row.appendChild(btn);
+  }
+
+  return row;
+}
+
+function _expandHour(h) {
+  state.expandedHours.add(h);
+  renderAgenda();
+  requestAnimationFrame(() => {
+    const wrapper = document.querySelector(`.agenda-hour-expanded[data-hour="${h}"]`);
+    if (!wrapper) return;
+    const height = wrapper.scrollHeight;
+    wrapper.style.maxHeight = "0px";
+    wrapper.style.overflow = "hidden";
+    requestAnimationFrame(() => {
+      wrapper.style.transition = "max-height 0.35s ease-out";
+      wrapper.style.maxHeight = height + "px";
+      setTimeout(() => {
+        wrapper.style.maxHeight = "";
+        wrapper.style.overflow = "";
+        wrapper.style.transition = "";
+      }, 370);
+    });
+  });
+}
+
+function _collapseHour(h) {
+  const wrapper = document.querySelector(`.agenda-hour-expanded[data-hour="${h}"]`);
+  if (!wrapper) {
+    state.expandedHours.delete(h);
+    renderAgenda();
+    return;
+  }
+  wrapper.style.maxHeight = wrapper.scrollHeight + "px";
+  wrapper.style.overflow = "hidden";
+  requestAnimationFrame(() => {
+    wrapper.style.transition = "max-height 0.3s ease-in";
+    wrapper.style.maxHeight = "0px";
+  });
+  setTimeout(() => {
+    state.expandedHours.delete(h);
+    renderAgenda();
+  }, 320);
 }
 
 // ── Scroll all'ora corrente ───────────────────────────────────────────────────

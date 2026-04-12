@@ -449,9 +449,8 @@ html[data-theme="dark"] .sidebar-expander:hover {
 }
 /* Ogni pagina è un foglio A4 fisso */
 .editor-page-sheet {
-  width: 100%;
+  width: 90%;
   max-width: 794px;
-  /*height: 1123px;*/
   height:90%;
   flex-shrink: 0;
   background: var(--md-surface);
@@ -466,7 +465,7 @@ html[data-theme="dark"] .sidebar-expander:hover {
   display: block;
   width: 100%;
   height: 100%;
-  padding: 80px;
+  padding: 80px 80px 30px;
   border: none;
   outline: none;
   resize: none;
@@ -1224,6 +1223,49 @@ html[data-theme="dark"] .btn-export:active {
   opacity: 1;
   filter: drop-shadow(0 0 6px var(--alarm-color));
   color: var(--alarm-color);
+}
+.agenda-expand-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--md-on-surface);
+  opacity: 0.2;
+  transition: opacity 0.2s, transform 0.2s;
+  padding: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.agenda-expand-btn:hover {
+  opacity: 0.65;
+  transform: scale(1.15);
+}
+.agenda-expand-btn--active {
+  opacity: 0.55;
+  color: var(--md-primary);
+}
+.agenda-expand-btn--active:hover {
+  opacity: 1;
+}
+
+/* Wrapper figli (animato) */
+.agenda-hour-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 22px;
+  border-left: 2px solid var(--md-border);
+  margin-left: 10px;
+}
+
+/* Righe figlie */
+.agenda-sub-row {
+  background: var(--md-bg);
+  border-color: var(--md-border);
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 /* Modal Timer Lampeggiante */

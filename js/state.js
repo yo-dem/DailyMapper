@@ -16,6 +16,8 @@ const ICONS = {
   swap: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="14" viewBox="0 0 24 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><line x1="3" y1="5" x2="21" y2="5"/><polyline points="7 19 3 15 7 11"/><line x1="21" y1="15" x2="3" y2="15"/></svg>`,
   arrowRight: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="12" viewBox="0 0 15 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="6" x2="14" y2="6"/><polyline points="9 1 14 6 9 11"/></svg>`,
   arrowBoth: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="6" x2="15" y2="6"/><polyline points="5 1 1 6 5 11"/><polyline points="11 1 15 6 11 11"/></svg>`,
+  chevronDown: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+  chevronUp:   `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`,
 };
 
 // ── Stato applicazione ────────────────────────────────────────────────────────
@@ -29,4 +31,6 @@ const state = {
   isConnecting: false,
   connectStartId: null,
   navIndex: 0,
+  expandedHours: new Set(),
+  expandedHoursDay: null,
 };
