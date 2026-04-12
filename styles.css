@@ -1393,15 +1393,15 @@ html[data-theme="dark"] .date-modal.flashing-overlay {
 .todo-drag-handle:active {
   cursor: grabbing;
 }
-.todo-item.dragging {
-  opacity: 0.35;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+.todo-placeholder {
+  border: 2px dashed var(--md-primary);
+  border-radius: 12px;
+  background: rgba(98, 0, 238, 0.06);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
-.todo-item.drag-over-top {
-  border-top: 2px solid var(--md-primary);
-}
-.todo-item.drag-over-bottom {
-  border-bottom: 2px solid var(--md-primary);
+html[data-theme="dark"] .todo-placeholder {
+  background: rgba(141, 108, 229, 0.12);
 }
 .todo-item.checked {
   opacity: 0.55;

@@ -1,9 +1,18 @@
 // ── Todo List ─────────────────────────────────────────────────────────────────
 
-let _dragTodoId    = null;
+let _dragTodoId     = null;
 let _dragFromHandle = false;
+let _placeholder    = null;
 
 const _GRIP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16" fill="currentColor"><circle cx="3" cy="2"  r="1.5"/><circle cx="9" cy="2"  r="1.5"/><circle cx="3" cy="6"  r="1.5"/><circle cx="9" cy="6"  r="1.5"/><circle cx="3" cy="10" r="1.5"/><circle cx="9" cy="10" r="1.5"/><circle cx="3" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/></svg>`;
+
+function _cleanupDrag(restoreItem) {
+  if (restoreItem) restoreItem.style.display = "";
+  _placeholder?.remove();
+  _placeholder    = null;
+  _dragTodoId     = null;
+  _dragFromHandle = false;
+}
 
 function renderTodo() {
   const container = document.getElementById("todo-list");
@@ -12,9 +21,39 @@ function renderTodo() {
   if (!dd.todos) dd.todos = [];
   container.innerHTML = "";
 
-  dd.todos.forEach((todo) => {
-    container.appendChild(_createTodoItem(todo, dd));
-  });
+  dd.todos.forEach((todo) => container.appendChild(_createTodoItem(todo, dd)));
+
+  // ── Drop sul container (bubbling da qualsiasi figlio) ──────────────────────
+  container.ondragover = (e) => {
+    e.preventDefault();
+    if (!_placeholder || _dragTodoId === null) return;
+    const target = e.target.closest(".todo-item");
+    if (!target || target.style.display === "none") return; // ignora item nascosto o spazio vuoto
+    const rect   = target.getBoundingClientRect();
+    const isTop  = e.clientY < rect.top + rect.height / 2;
+    if (isTop) target.before(_placeholder);
+    else       target.after(_placeholder);
+  };
+
+  container.ondrop = (e) => {
+    e.preventDefault();
+    if (!_placeholder || _dragTodoId === null) return;
+    // Conta gli item visibili che precedono il placeholder nel DOM
+    const children  = [...container.children];
+    const phIdx     = children.indexOf(_placeholder);
+    let   insertAt  = 0;
+    for (let i = 0; i < phIdx; i++) {
+      const ch = children[i];
+      if (ch.classList.contains("todo-item") && ch.style.display !== "none") insertAt++;
+    }
+    const fromIdx = dd.todos.findIndex((t) => t.id === _dragTodoId);
+    if (fromIdx === -1) { _cleanupDrag(); return; }
+    const [moved] = dd.todos.splice(fromIdx, 1);
+    dd.todos.splice(insertAt, 0, moved);
+    _cleanupDrag();
+    saveMap();
+    renderTodo();
+  };
 }
 
 function _createTodoItem(todo, dd) {
@@ -34,43 +73,18 @@ function _createTodoItem(todo, dd) {
     if (!_dragFromHandle) { e.preventDefault(); return; }
     _dragTodoId = todo.id;
     e.dataTransfer.effectAllowed = "move";
-    setTimeout(() => item.classList.add("dragging"), 0);
+    // Crea la placeholder con la stessa altezza dell'item
+    _placeholder = document.createElement("div");
+    _placeholder.className = "todo-placeholder";
+    _placeholder.style.height = item.offsetHeight + "px";
+    item.after(_placeholder);
+    // Nasconde l'item dopo che il browser ha catturato il ghost di drag
+    setTimeout(() => { item.style.display = "none"; }, 0);
   });
+
   item.addEventListener("dragend", () => {
-    _dragFromHandle = false;
-    item.classList.remove("dragging");
-    document.querySelectorAll(".todo-item").forEach((el) =>
-      el.classList.remove("drag-over-top", "drag-over-bottom")
-    );
-  });
-  item.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    if (todo.id === _dragTodoId) return;
-    const rect = item.getBoundingClientRect();
-    const isTop = e.clientY < rect.top + rect.height / 2;
-    document.querySelectorAll(".todo-item").forEach((el) =>
-      el.classList.remove("drag-over-top", "drag-over-bottom")
-    );
-    item.classList.add(isTop ? "drag-over-top" : "drag-over-bottom");
-  });
-  item.addEventListener("dragleave", (e) => {
-    if (!item.contains(e.relatedTarget))
-      item.classList.remove("drag-over-top", "drag-over-bottom");
-  });
-  item.addEventListener("drop", (e) => {
-    e.preventDefault();
-    item.classList.remove("drag-over-top", "drag-over-bottom");
-    if (_dragTodoId === null || _dragTodoId === todo.id) return;
-    const rect = item.getBoundingClientRect();
-    const insertAfter = e.clientY >= rect.top + rect.height / 2;
-    const fromIdx = dd.todos.findIndex((t) => t.id === _dragTodoId);
-    if (fromIdx === -1) return;
-    const [moved] = dd.todos.splice(fromIdx, 1);
-    const toIdx = dd.todos.findIndex((t) => t.id === todo.id);
-    dd.todos.splice(toIdx === -1 ? dd.todos.length : insertAfter ? toIdx + 1 : toIdx, 0, moved);
-    _dragTodoId = null;
-    saveMap();
-    renderTodo();
+    // Se drop non è avvenuto (drag annullato) ripristina l'item
+    if (_dragTodoId !== null) _cleanupDrag(item);
   });
 
   // ── Checkbox ──────────────────────────────────────────────────────────────
