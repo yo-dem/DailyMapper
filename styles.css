@@ -374,6 +374,7 @@ html[data-theme="dark"] .import-btn-confirm {
   cursor: pointer;
   font-family: inherit;
   font-weight: 500;
+  font-size: 16px;
   border-bottom: 3px solid transparent;
 }
 .nav-tab.active {
@@ -487,7 +488,7 @@ html[data-theme="dark"] .sidebar-expander:hover {
   font-family: inherit;
   padding: 6px 12px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 16px;
   cursor: pointer;
   font-weight: 300;
   width: 85%;
@@ -659,7 +660,7 @@ html[data-theme="dark"] .day-dot.has-agenda {
   background: transparent;
   color: inherit;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 15px;
   flex: 1;
   min-width: 0;
   outline: none;
@@ -676,18 +677,23 @@ html[data-theme="dark"] .day-dot.has-agenda {
 }
 .link-handle {
   cursor: crosshair;
-  font-size: 15px;
   padding: 1px 3px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  color: var(--md-on-surface);
+  opacity: 0.55;
+}
+.link-handle:hover {
+  opacity: 1;
 }
 .postit-del {
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
   padding: 1px 3px;
   color: #bbb;
+  display: inline-flex;
+  align-items: center;
 }
 .postit-del:hover {
   color: #c00;
@@ -1200,12 +1206,15 @@ html[data-theme="dark"] .btn-export:active {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 20px;
+  color: var(--md-on-surface);
   opacity: 0.3;
   transition: all 0.2s;
   padding: 4px;
   flex-shrink: 0;
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .agenda-clock-btn:hover {
   opacity: 0.8;
@@ -1213,7 +1222,8 @@ html[data-theme="dark"] .btn-export:active {
 }
 .agenda-clock-btn.active {
   opacity: 1;
-  text-shadow: 0 0 10px var(--alarm-color);
+  filter: drop-shadow(0 0 6px var(--alarm-color));
+  color: var(--alarm-color);
 }
 
 /* Modal Timer Lampeggiante */
@@ -1358,13 +1368,40 @@ html[data-theme="dark"] .date-modal.flashing-overlay {
 }
 .todo-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   background: var(--md-surface);
   border: 1px solid var(--md-border);
   border-radius: 12px;
   padding: 14px 16px;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, box-shadow 0.15s;
+}
+.todo-drag-handle {
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--md-on-surface);
+  opacity: 0.25;
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+}
+.todo-drag-handle:hover {
+  opacity: 0.65;
+}
+.todo-drag-handle:active {
+  cursor: grabbing;
+}
+.todo-item.dragging {
+  opacity: 0.35;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+.todo-item.drag-over-top {
+  border-top: 2px solid var(--md-primary);
+}
+.todo-item.drag-over-bottom {
+  border-bottom: 2px solid var(--md-primary);
 }
 .todo-item.checked {
   opacity: 0.55;
@@ -1408,7 +1445,8 @@ html[data-theme="dark"] .date-modal.flashing-overlay {
   outline: none;
   resize: none;
   line-height: 1.5;
-  padding: 2px 0;
+  padding: 10px 0;
+  margin-left: 50px;
 }
 .todo-textarea::placeholder {
   color: var(--text-muted, #aaa);
@@ -1425,37 +1463,38 @@ html[data-theme="dark"] .date-modal.flashing-overlay {
   flex-shrink: 0;
   height: 32px;
   margin-top: 3px;
+  width: 80px;
 }
 .todo-copy-btn {
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 18px;
+  color: var(--md-on-surface);
   opacity: 0.45;
   transition: opacity 0.2s, transform 0.1s;
   flex-shrink: 0;
   padding: 4px;
   margin-top: 2px;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .todo-copy-btn:hover {
   opacity: 1;
   transform: scale(1.15);
 }
 .todo-delete-btn {
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: var(--md-primary);
   color: #fff;
   border: none;
-  font-size: 20px;
   cursor: pointer;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
   margin-top: 3px;
   transition: background 0.15s, transform 0.1s;
 }

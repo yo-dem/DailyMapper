@@ -96,7 +96,7 @@ function renderAgenda() {
     if (!isPast) {
       const clock = document.createElement("button");
       clock.className = "agenda-clock-btn" + (hourData.alarm ? " active" : "");
-      clock.innerHTML = "⏰";
+      clock.innerHTML = ICONS.alarm;
       clock.onclick = () => {
         dd.agenda[i].alarm = !dd.agenda[i].alarm;
         dd.agenda[i].snoozeUntil = null;

@@ -1,5 +1,10 @@
 // ── Todo List ─────────────────────────────────────────────────────────────────
 
+let _dragTodoId    = null;
+let _dragFromHandle = false;
+
+const _GRIP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16" fill="currentColor"><circle cx="3" cy="2"  r="1.5"/><circle cx="9" cy="2"  r="1.5"/><circle cx="3" cy="6"  r="1.5"/><circle cx="9" cy="6"  r="1.5"/><circle cx="3" cy="10" r="1.5"/><circle cx="9" cy="10" r="1.5"/><circle cx="3" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/></svg>`;
+
 function renderTodo() {
   const container = document.getElementById("todo-list");
   if (!container) return;
@@ -16,6 +21,57 @@ function _createTodoItem(todo, dd) {
   const item = document.createElement("div");
   item.className = "todo-item" + (todo.checked ? " checked" : "");
   item.id = "todo-" + todo.id;
+  item.draggable = true;
+
+  // ── Drag handle ───────────────────────────────────────────────────────────
+  const handle = document.createElement("div");
+  handle.className = "todo-drag-handle";
+  handle.innerHTML = _GRIP_SVG;
+  handle.title = "Trascina per riordinare";
+  handle.addEventListener("mousedown", () => { _dragFromHandle = true; });
+
+  item.addEventListener("dragstart", (e) => {
+    if (!_dragFromHandle) { e.preventDefault(); return; }
+    _dragTodoId = todo.id;
+    e.dataTransfer.effectAllowed = "move";
+    setTimeout(() => item.classList.add("dragging"), 0);
+  });
+  item.addEventListener("dragend", () => {
+    _dragFromHandle = false;
+    item.classList.remove("dragging");
+    document.querySelectorAll(".todo-item").forEach((el) =>
+      el.classList.remove("drag-over-top", "drag-over-bottom")
+    );
+  });
+  item.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    if (todo.id === _dragTodoId) return;
+    const rect = item.getBoundingClientRect();
+    const isTop = e.clientY < rect.top + rect.height / 2;
+    document.querySelectorAll(".todo-item").forEach((el) =>
+      el.classList.remove("drag-over-top", "drag-over-bottom")
+    );
+    item.classList.add(isTop ? "drag-over-top" : "drag-over-bottom");
+  });
+  item.addEventListener("dragleave", (e) => {
+    if (!item.contains(e.relatedTarget))
+      item.classList.remove("drag-over-top", "drag-over-bottom");
+  });
+  item.addEventListener("drop", (e) => {
+    e.preventDefault();
+    item.classList.remove("drag-over-top", "drag-over-bottom");
+    if (_dragTodoId === null || _dragTodoId === todo.id) return;
+    const rect = item.getBoundingClientRect();
+    const insertAfter = e.clientY >= rect.top + rect.height / 2;
+    const fromIdx = dd.todos.findIndex((t) => t.id === _dragTodoId);
+    if (fromIdx === -1) return;
+    const [moved] = dd.todos.splice(fromIdx, 1);
+    const toIdx = dd.todos.findIndex((t) => t.id === todo.id);
+    dd.todos.splice(toIdx === -1 ? dd.todos.length : insertAfter ? toIdx + 1 : toIdx, 0, moved);
+    _dragTodoId = null;
+    saveMap();
+    renderTodo();
+  });
 
   // ── Checkbox ──────────────────────────────────────────────────────────────
   const checkbox = document.createElement("div");
@@ -55,7 +111,7 @@ function _createTodoItem(todo, dd) {
   const copyBtn = document.createElement("button");
   copyBtn.className = "todo-copy-btn";
   copyBtn.title = "Copia in Agenda con allarme";
-  copyBtn.innerHTML = "📅";
+  copyBtn.innerHTML = ICONS.calendar;
   copyBtn.onclick = () => _copyTodoToAgenda(todo);
 
   // ── Pulsante elimina ──────────────────────────────────────────────────────
@@ -70,6 +126,7 @@ function _createTodoItem(todo, dd) {
     renderDays(false);
   };
 
+  item.appendChild(handle);
   item.appendChild(checkbox);
   item.appendChild(textarea);
   item.appendChild(timePicker);

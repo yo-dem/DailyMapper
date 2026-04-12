@@ -10,7 +10,7 @@ function initTheme() {
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const toggleButton = document.getElementById("theme-toggle");
-  if (toggleButton) toggleButton.textContent = theme === "dark" ? "☀️" : "🌙";
+  if (toggleButton) toggleButton.innerHTML = theme === "dark" ? ICONS.sun : ICONS.moon;
   localStorage.setItem(THEME_KEY, theme);
 }
 

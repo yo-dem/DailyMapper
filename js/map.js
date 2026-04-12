@@ -219,8 +219,8 @@ function renderMap() {
           oninput="updatePostitField(${p.id},'title',this.value)">
         <div class="postit-btns">
           <button class="postit-color-btn" onclick="openColorPicker(event,${p.id})" title="Cambia colore">&#11044;</button>
-          <span class="link-handle" onmousedown="startConnection(event,${p.id})">🔗</span>
-          <button class="postit-del" onclick="deletePostit(${p.id})">✕</button>
+          <span class="link-handle" onmousedown="startConnection(event,${p.id})">${ICONS.link}</span>
+          <button class="postit-del" onclick="deletePostit(${p.id})">${ICONS.close}</button>
         </div>
       </div>
       <textarea class="postit-body"
@@ -455,18 +455,18 @@ function showArrowMenu(e, a, dd) {
     return b;
   };
 
-  menu.appendChild(mkbtn("⇄", "Inverti direzione", "", () => {
+  menu.appendChild(mkbtn(ICONS.swap, "Inverti direzione", "", () => {
     [a.from, a.to] = [a.to, a.from];
     a.cp.dx = -a.cp.dx; a.cp.dy = -a.cp.dy;
     drawArrows(); saveMap(); menu.remove();
   }));
   menu.appendChild(mkbtn(
-    a.bidir ? "→" : "↔",
+    a.bidir ? ICONS.arrowRight : ICONS.arrowBoth,
     a.bidir ? "Freccia semplice" : "Bidirezionale",
     "",
     () => { a.bidir = !a.bidir; drawArrows(); saveMap(); menu.remove(); }
   ));
-  menu.appendChild(mkbtn("✕", "Elimina connessione", "danger", () => {
+  menu.appendChild(mkbtn(ICONS.close, "Elimina connessione", "danger", () => {
     dd.arrows = dd.arrows.filter((x) => x !== a);
     drawArrows(); saveMap(); menu.remove();
   }));
@@ -497,7 +497,7 @@ function openColorPicker(e, id) {
   none.className = "color-swatch" + (!p.color ? " selected" : "");
   none.title = "Nessuno";
   none.style.background = "#f0f0f0";
-  none.textContent = "✕";
+  none.innerHTML = ICONS.close;
   none.onclick = () => { p.color = ""; saveMap(); renderMap(); popup.remove(); };
   popup.appendChild(none);
 
