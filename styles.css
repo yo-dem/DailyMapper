@@ -1373,16 +1373,45 @@ html[data-theme="dark"] .date-modal.flashing-overlay {
   animation: blinkBorderIntense 1s infinite alternate ease-in-out;
 }
 /* ── Responsive: finestra stretta ── */
+/* 700 px: sidebar già collassata — riduciamo padding foglio */
 @media (max-width: 700px) {
   #editor-bg {
-    overflow-x: auto;
-    align-items: flex-start; /* evita che flexbox schiacci la pagina */
-    padding-left: 12px;
-    padding-right: 12px;
-    overscroll-behavior: none;
+    padding: 20px 10px 40px;
   }
   .editor-page-sheet {
-    min-width: 560px; /* larghezza minima usabile prima dello scroll orizzontale */
+    width: 100%;
+    border-radius: 14px;
+  }
+  .editor-page-sheet textarea {
+    padding: 48px 48px 24px;
+  }
+}
+
+/* 520 px: schermo molto stretto — padding ulteriormente ridotti */
+@media (max-width: 520px) {
+  #editor-bg {
+    padding: 10px 6px 24px;
+  }
+  .editor-page-sheet {
+    border-radius: 10px;
+  }
+  .editor-page-sheet textarea {
+    padding: 28px 24px 16px;
+  }
+}
+
+/* 380 px: schermo minimo — padding al minimo indispensabile */
+@media (max-width: 380px) {
+  #editor-bg {
+    padding: 6px 2px 12px;
+    gap: 10px;
+  }
+  .editor-page-sheet {
+    border-radius: 6px;
+  }
+  .editor-page-sheet textarea {
+    padding: 14px 10px 10px;
+    font-size: 15px;
   }
 }
 
