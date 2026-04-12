@@ -6,10 +6,14 @@ function dayData() {
       postits: [],
       arrows: [],
       agenda: {},
+      todos: [],
     };
   }
   if (!state.data[state.currentDay].agenda) {
     state.data[state.currentDay].agenda = {};
+  }
+  if (!state.data[state.currentDay].todos) {
+    state.data[state.currentDay].todos = [];
   }
   return state.data[state.currentDay];
 }

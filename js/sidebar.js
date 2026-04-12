@@ -114,6 +114,7 @@ function renderDays(scrollToActive = false) {
     const hasAgenda = dd && dd.agenda && Object.values(dd.agenda).some(
       (slot) => (slot.text && slot.text.trim().length > 0) || slot.alarm
     );
+    const hasTodo = dd && dd.todos && dd.todos.length > 0;
 
     const indicators = document.createElement("span");
     indicators.className = "day-indicators";
@@ -175,6 +176,20 @@ function renderDays(scrollToActive = false) {
         });
       };
       indicators.appendChild(agendaDot);
+    }
+
+    if (hasTodo) {
+      const todoDot = document.createElement("span");
+      todoDot.className = "day-dot has-todo";
+      todoDot.title = "Clicca per vedere i todo";
+      todoDot.onclick = (e) => {
+        e.stopPropagation();
+        state.currentDay = ds;
+        renderDays(false);
+        loadDay();
+        switchView("todo", document.querySelector('.nav-tab[onclick*="todo"]'));
+      };
+      indicators.appendChild(todoDot);
     }
 
     const dayNum = document.createElement("span");

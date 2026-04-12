@@ -25,6 +25,7 @@
     </button>
     <button class="nav-tab" onclick="switchView('map', this)">Mappa</button>
     <button class="nav-tab" onclick="switchView('agenda', this)">Agenda</button>
+    <button class="nav-tab" onclick="switchView('todo', this)">To do</button>
 
     <input
             type="file"
@@ -174,6 +175,13 @@
       </div>
     </main>
 
+    <main id="todo-view" class="view">
+      <div id="todo-bg">
+        <div id="todo-list"></div>
+      </div>
+      <button class="fab" onclick="addTodo()">+</button>
+    </main>
+
     <div id="postit-nav">
       <button
               class="nav-arrow"
@@ -235,7 +243,8 @@
   6. agenda.js   → renderAgenda, allarmi     (dipende da state, dayData, saveMap, renderDays, loadDay, switchView)
   7. map.js      → renderMap, postit, frecce (dipende da state, dayData, saveMap, renderDays — deve venire dopo sidebar)
   8. ui.js       → switchView, toast, I/E    (dipende da tutti i precedenti)
-  9. main.js     → bootstrap + keyboard      (dipende da tutto)
+  9. todo.js     → renderTodo, addTodo       (dipende da dayData, saveMap, renderDays, showToast)
+ 10. main.js     → bootstrap + keyboard      (dipende da tutto)
 -->
 <script src="js/state.js"></script>
 <script src="js/storage.js"></script>
@@ -245,6 +254,7 @@
 <script src="js/agenda.js"></script>
 <script src="js/map.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/todo.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

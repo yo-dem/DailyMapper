@@ -35,6 +35,10 @@ function switchView(v, btn) {
     renderAgenda();
     scrollToCurrentTime();
   }
+
+  if (v === "todo") {
+    renderTodo();
+  }
 }
 
 // ── Toast notifica ────────────────────────────────────────────────────────────
