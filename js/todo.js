@@ -101,7 +101,7 @@ function _createTodoItem(todo, dd) {
   // ── Textarea (2 righe) ────────────────────────────────────────────────────
   const textarea = document.createElement("textarea");
   textarea.className = "todo-textarea";
-  textarea.placeholder = "Nota...";
+  textarea.placeholder = "Aggiungi...";
   textarea.rows = 2;
   textarea.value = todo.text;
   textarea.oninput = (e) => {

@@ -21,11 +21,11 @@
       DailyMapper
     </div>
     <button class="nav-tab active" onclick="switchView('editor', this)">
-      Note
+      Appunti
     </button>
     <button class="nav-tab" onclick="switchView('map', this)">Mappa</button>
     <button class="nav-tab" onclick="switchView('agenda', this)">Agenda</button>
-    <button class="nav-tab" onclick="switchView('todo', this)">ToDo</button>
+    <button class="nav-tab" onclick="switchView('todo', this)">Attività</button>
 
     <input
             type="file"
@@ -242,16 +242,16 @@
 
 <!--
   Ordine di caricamento degli script (le dipendenze devono precedere chi le usa):
-  1. state.js    → costanti e oggetto state (nessuna dipendenza)
-  2. storage.js  → dayData / save / saveMap  (dipende da state)
-  3. theme.js    → initTheme / toggleTheme   (dipende da THEME_KEY)
-  4. editor.js   → loadDay                   (dipende da dayData, renderMap, renderAgenda)
-  5. sidebar.js  → renderDays, nav date      (dipende da state, dayData, loadDay, switchView, centerOnPostit)
-  6. agenda.js   → renderAgenda, allarmi     (dipende da state, dayData, saveMap, renderDays, loadDay, switchView)
-  7. map.js      → renderMap, postit, frecce (dipende da state, dayData, saveMap, renderDays — deve venire dopo sidebar)
-  8. ui.js       → switchView, toast, I/E    (dipende da tutti i precedenti)
-  9. todo.js     → renderTodo, addTodo       (dipende da dayData, saveMap, renderDays, showToast)
- 10. main.js     → bootstrap + keyboard      (dipende da tutto)
+  1. _state.js    → costanti e oggetto state (nessuna dipendenza)
+  2. _storage.js  → dayData / save / saveMap  (dipende da state)
+  3. _theme.js    → initTheme / toggleTheme   (dipende da THEME_KEY)
+  4. _editor.js   → loadDay                   (dipende da dayData, renderMap, renderAgenda)
+  5. _sidebar.js  → renderDays, nav date      (dipende da state, dayData, loadDay, switchView, centerOnPostit)
+  6. _agenda.js   → renderAgenda, allarmi     (dipende da state, dayData, saveMap, renderDays, loadDay, switchView)
+  7. _map.js      → renderMap, postit, frecce (dipende da state, dayData, saveMap, renderDays — deve venire dopo sidebar)
+  8. _ui.js       → switchView, toast, I/E    (dipende da tutti i precedenti)
+  9. _todo.js     → renderTodo, addTodo       (dipende da dayData, saveMap, renderDays, showToast)
+ 10. _main.js     → bootstrap + keyboard      (dipende da tutto)
 -->
 <script src="js/state.js"></script>
 <script src="js/storage.js"></script>

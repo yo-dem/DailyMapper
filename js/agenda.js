@@ -164,7 +164,7 @@ function _createAgendaRow(i, dd, cutoffSlot, opts) {
 
   const textarea = document.createElement("textarea");
   textarea.className = "agenda-input";
-  textarea.placeholder = "...";
+  textarea.placeholder = "Aggiungi...";
   textarea.rows = 2;
   textarea.value = hourData.text;
   textarea.oninput = (e) => {

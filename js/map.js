@@ -191,7 +191,7 @@ function addPostit() {
     y: baseY + offset * index,
     w: 220,
     h: null,
-    title: `nota ${index + 1}`,
+    title: `Nota ${index + 1}`,
     content: "",
   });
   renderMap();
