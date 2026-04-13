@@ -57,6 +57,17 @@ function renderGranularityToolbar() {
   navBtn.title = "Vai alla prossima nota valorizzata";
   navBtn.onclick = scrollToNextFilledSlot;
   toolbar.appendChild(navBtn);
+
+  const sep2 = document.createElement("div");
+  sep2.className = "agenda-gran-sep";
+  toolbar.appendChild(sep2);
+
+  const clearBtn = document.createElement("button");
+  clearBtn.className = "agenda-gran-btn agenda-gran-clear-btn";
+  clearBtn.innerHTML = ICONS.trash;
+  clearBtn.title = "Cancella tutte le note e gli allarmi del giorno";
+  clearBtn.onclick = triggerClearAgenda;
+  toolbar.appendChild(clearBtn);
 }
 
 // ── Rendering agenda ──────────────────────────────────────────────────────────
@@ -440,4 +451,35 @@ function closeAlarmModal() {
   if (document.getElementById("agenda-view").classList.contains("active")) {
     renderAgenda();
   }
+}
+
+// ── Cancella agenda del giorno corrente ───────────────────────────────────────
+function triggerClearAgenda() {
+  const overlay = document.createElement("div");
+  overlay.className = "import-overlay";
+  overlay.innerHTML = `
+    <div class="import-dialog">
+      <h3>&#9888; Attenzione</h3>
+      <p>Questa operazione cancellerà <strong>tutte le note e gli allarmi</strong> dell'agenda per il giorno selezionato.<br><br>Sei sicuro di voler proseguire?</p>
+      <div class="import-dialog-btns">
+        <button class="import-btn-cancel" id="clear-agenda-cancel">Annulla</button>
+        <button class="import-btn-confirm" id="clear-agenda-confirm">Sì, cancella</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById("clear-agenda-cancel").onclick = () => overlay.remove();
+  document.getElementById("clear-agenda-confirm").onclick = () => {
+    overlay.remove();
+    clearAgendaDay();
+  };
+}
+
+function clearAgendaDay() {
+  const dd = dayData();
+  dd.agenda = {};
+  saveMap();
+  state.expandedHours = new Set();
+  state.agendaNavIndex = -1;
+  renderAgenda();
+  showToast("✓ Agenda del giorno cancellata");
 }

@@ -1199,6 +1199,17 @@ html[data-theme="dark"] .btn-export:active {
   align-items: center;
   justify-content: center;
 }
+.agenda-gran-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--alarm-color);
+  opacity: 0.7;
+}
+.agenda-gran-clear-btn:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--alarm-color) 12%, transparent);
+}
 
 /* ── Righe agenda ── */
 .agenda-row {
