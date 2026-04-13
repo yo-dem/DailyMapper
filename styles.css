@@ -12,6 +12,7 @@
   --today-color: rgba(220, 220, 255, 0.85);
   --alarm-color: #d32f2f; /* NUOVO: Colore allarme chiaro */
   --editor-bg: #e0e0e0;
+  --text-muted: #b0b0b8;
 }
 html[data-theme="dark"] {
   --md-primary: #4f2e80;
@@ -24,7 +25,7 @@ html[data-theme="dark"] {
   --md-canvas-dots: rgba(248, 248, 242, 0.3);
   --today-color: rgba(189, 147, 249, 0.16);
   --surface-muted: #2c273e;
-  --text-muted: #c6c7dc;
+  --text-muted: #6e6d85;
   --control-bg: rgba(248, 248, 242, 0.08);
   --control-border: rgba(248, 248, 242, 0.14);
   --overlay-bg: rgba(42, 38, 61, 0.96);
@@ -1245,7 +1246,7 @@ html[data-theme="dark"] .btn-export:active {
   overflow: hidden;
 }
 .agenda-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-muted, #b0b0b8);
 }
 .agenda-clock-btn {
   background: transparent;
