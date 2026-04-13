@@ -1189,6 +1189,16 @@ html[data-theme="dark"] .btn-export:active {
   color: #fff;
   font-weight: 600;
 }
+.agenda-gran-sep {
+  height: 1px;
+  background: var(--md-border);
+  margin: 2px 6px;
+}
+.agenda-gran-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* ── Righe agenda ── */
 .agenda-row {

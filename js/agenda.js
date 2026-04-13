@@ -46,6 +46,17 @@ function renderGranularityToolbar() {
     btn.onclick = () => setAgendaGranularity(minutes);
     toolbar.appendChild(btn);
   });
+
+  const sep = document.createElement("div");
+  sep.className = "agenda-gran-sep";
+  toolbar.appendChild(sep);
+
+  const navBtn = document.createElement("button");
+  navBtn.className = "agenda-gran-btn agenda-gran-nav-btn";
+  navBtn.innerHTML = ICONS.noteSearch;
+  navBtn.title = "Vai alla prossima nota valorizzata";
+  navBtn.onclick = scrollToNextFilledSlot;
+  toolbar.appendChild(navBtn);
 }
 
 // ── Rendering agenda ──────────────────────────────────────────────────────────
@@ -57,6 +68,7 @@ function renderAgenda() {
   if (state.expandedHoursDay !== state.currentDay) {
     state.expandedHours = new Set();
     state.expandedHoursDay = state.currentDay;
+    state.agendaNavIndex = -1;
   }
 
   const list = document.getElementById("agenda-list");
@@ -229,6 +241,56 @@ function _collapseHour(h) {
     state.expandedHours.delete(h);
     renderAgenda();
   }, 320);
+}
+
+// ── Navigazione alla prossima nota valorizzata ────────────────────────────────
+function scrollToNextFilledSlot() {
+  const dd = dayData();
+  if (!dd.agenda) return;
+
+  // Raccogli tutti gli slot con testo
+  const filled = [];
+  for (let i = 0; i < 288; i++) {
+    if (dd.agenda[i] && dd.agenda[i].text && dd.agenda[i].text.trim()) {
+      filled.push(i);
+    }
+  }
+  if (filled.length === 0) return;
+
+  // Trova il prossimo slot dopo l'ultimo visitato (cicla a capo)
+  let nextIdx = filled.findIndex(idx => idx > state.agendaNavIndex);
+  if (nextIdx === -1) {
+    state.agendaNavIndex = -1;
+    nextIdx = 0;
+  }
+  const slotIndex = filled[nextIdx];
+  state.agendaNavIndex = slotIndex;
+
+  // Verifica se lo slot è visibile con la granularità corrente
+  const step = granularityStep();
+  const isOnTopLevel = slotIndex % step === 0;
+  const isInExpandedHour = !isOnTopLevel && state.expandedHours.has(Math.floor(slotIndex / 12));
+  const isVisible = isOnTopLevel || isInExpandedHour;
+
+  if (!isVisible) {
+    // Imposta granularità a 5m per rendere visibile lo slot
+    state.agendaGranularity = 5;
+    state.expandedHours = new Set();
+    localStorage.setItem(GRANULARITY_KEY, 5);
+    renderAgenda();
+    setTimeout(() => _scrollToSlotHighlight(slotIndex), 50);
+  } else {
+    _scrollToSlotHighlight(slotIndex);
+  }
+}
+
+function _scrollToSlotHighlight(slotIndex) {
+  const row = document.getElementById("agenda-row-" + slotIndex);
+  if (!row) return;
+  row.scrollIntoView({ behavior: "smooth", block: "center" });
+  row.style.transition = "background-color 0.4s";
+  row.style.backgroundColor = "var(--today-color)";
+  setTimeout(() => { row.style.backgroundColor = ""; }, 1500);
 }
 
 // ── Scroll all'ora corrente ───────────────────────────────────────────────────
