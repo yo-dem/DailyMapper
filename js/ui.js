@@ -136,5 +136,6 @@ function clearAllData() {
   localStorage.removeItem(STORAGE_KEY);
   renderDays(true);
   loadDay();
+  switchView("editor", document.querySelector('.nav-tab[onclick*="editor"]'));
   showToast("✓ Tutti i dati sono stati cancellati");
 }
