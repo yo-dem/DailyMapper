@@ -65,9 +65,13 @@ function renderAgenda() {
   const dd = dayData();
   const step = granularityStep();
 
-  const isToday = state.currentDay === TODAY_ISO;
   const now = new Date();
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const isToday = state.currentDay === todayISO;
   const currentSlot = now.getHours() * 12 + Math.floor(now.getMinutes() / 5);
+  // Slot sotto cui non mostrare il pulsante sveglia:
+  // giorno passato → tutti i 288 slot; oggi → solo quelli prima dell'ora attuale; futuro → nessuno
+  const cutoffSlot = state.currentDay < todayISO ? 288 : isToday ? currentSlot : -1;
 
   const handledHours = new Set();
 
@@ -81,7 +85,7 @@ function renderAgenda() {
 
       // Riga padre = lo slot :00 dell'ora, con pulsante collassa
       list.appendChild(
-        _createAgendaRow(h * 12, dd, isToday, currentSlot, {
+        _createAgendaRow(h * 12, dd, cutoffSlot, {
           isSubSlot: false,
           hour: h,
           showExpand: false,
@@ -95,7 +99,7 @@ function renderAgenda() {
       wrapper.dataset.hour = h;
       for (let sub = h * 12 + 1; sub < (h + 1) * 12; sub++) {
         wrapper.appendChild(
-          _createAgendaRow(sub, dd, isToday, currentSlot, {
+          _createAgendaRow(sub, dd, cutoffSlot, {
             isSubSlot: true,
             hour: h,
             showExpand: false,
@@ -108,7 +112,7 @@ function renderAgenda() {
       // Solo sulle righe :00 di ogni ora viene mostrato l'expand
       const showExpand = step > 1 && i % 12 === 0;
       list.appendChild(
-        _createAgendaRow(i, dd, isToday, currentSlot, {
+        _createAgendaRow(i, dd, cutoffSlot, {
           isSubSlot: false,
           hour: h,
           showExpand,
@@ -119,13 +123,13 @@ function renderAgenda() {
   }
 }
 
-function _createAgendaRow(i, dd, isToday, currentSlot, opts) {
+function _createAgendaRow(i, dd, cutoffSlot, opts) {
   if (!dd.agenda[i]) dd.agenda[i] = { text: "", alarm: false, snoozeUntil: null };
   const hourData = dd.agenda[i];
   const h = Math.floor(i / 12);
   const m = (i % 12) * 5;
   const timeStr = String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
-  const isPast = isToday && i < currentSlot;
+  const isPast = i < cutoffSlot;
 
   const row = document.createElement("div");
   row.className = "agenda-row" + (opts.isSubSlot ? " agenda-sub-row" : "");
@@ -175,6 +179,13 @@ function _createAgendaRow(i, dd, isToday, currentSlot, opts) {
     btn.title = "Comprimi ora";
     btn.onclick = () => _collapseHour(opts.hour);
     row.appendChild(btn);
+  } else if (granularityStep() > 1) {
+    const spacer = document.createElement("span");
+    spacer.className = "agenda-expand-btn";
+    spacer.style.visibility = "hidden";
+    spacer.style.pointerEvents = "none";
+    spacer.innerHTML = ICONS.chevronDown;
+    row.appendChild(spacer);
   }
 
   return row;

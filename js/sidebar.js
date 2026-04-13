@@ -172,17 +172,6 @@ function renderDays(scrollToActive = false) {
         renderDays(false);
         loadDay();
         switchView("agenda", document.querySelector('.nav-tab[onclick*="agenda"]'));
-        // Scorri alla prima riga con contenuto o allarme
-        requestAnimationFrame(() => {
-          const dd = dayData();
-          const firstIdx = Object.keys(dd.agenda).find(
-            (k) => (dd.agenda[k].text && dd.agenda[k].text.trim().length > 0) || dd.agenda[k].alarm
-          );
-          if (firstIdx !== undefined) {
-            const row = document.getElementById("agenda-row-" + firstIdx);
-            if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        });
       };
       indicators.appendChild(agendaDot);
     }

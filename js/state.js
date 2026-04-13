@@ -1,5 +1,6 @@
 // ── Costanti globali ──────────────────────────────────────────────────────────
-const TODAY_ISO = new Date().toISOString().split("T")[0];
+const _today = new Date();
+const TODAY_ISO = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, "0")}-${String(_today.getDate()).padStart(2, "0")}`;
 const STORAGE_KEY = "dm_v3";
 const THEME_KEY = "dm_v3_theme";
 const SIDEBAR_KEY = "dm_v3_sidebar";
