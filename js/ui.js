@@ -12,10 +12,18 @@ window.addEventListener("click", () => {
 function switchView(v, btn) {
   document.querySelectorAll(".view").forEach((el) => el.classList.remove("active"));
   document.querySelectorAll(".nav-tab").forEach((el) => el.classList.remove("active"));
+  document.querySelectorAll(".nav-overflow-item").forEach((el) => el.classList.remove("active"));
 
   const viewEl = document.getElementById(v + "-view");
   if (viewEl) viewEl.classList.add("active");
   if (btn) btn.classList.add("active");
+
+  // sync overflow nav item
+  const overflowItem = document.querySelector(`.nav-overflow-item[data-view="${v}"]`);
+  if (overflowItem) overflowItem.classList.add("active");
+
+  // chiudi il pannello se aperto
+  document.getElementById("topbar-actions-panel").classList.remove("open");
 
   const nav = document.getElementById("postit-nav");
   if (v === "map") {

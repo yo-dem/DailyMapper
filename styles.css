@@ -385,6 +385,31 @@ html[data-theme="dark"] .import-btn-confirm {
   color: #fff;
   border-bottom-color: var(--today-color);
 }
+/* nav overflow (visibile solo su schermi stretti) */
+.nav-overflow-section {
+  display: none;
+  flex-direction: column;
+}
+.nav-overflow-divider {
+  height: 1px;
+  background: var(--md-border);
+  margin: 4px 0;
+}
+.nav-overflow-item.active {
+  color: var(--md-primary);
+  font-weight: 600;
+}
+html[data-theme="dark"] .nav-overflow-item.active {
+  color: #bb99ff;
+}
+@media (max-width: 760px) {
+  .nav-tab {
+    display: none;
+  }
+  .nav-overflow-section {
+    display: flex;
+  }
+}
 #main-container {
   position: relative;
   display: flex;

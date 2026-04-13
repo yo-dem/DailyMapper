@@ -44,6 +44,13 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18" fill="currentColor"><circle cx="2" cy="2" r="1.8"/><circle cx="2" cy="9" r="1.8"/><circle cx="2" cy="16" r="1.8"/></svg>
       </button>
       <div class="topbar-actions-panel" id="topbar-actions-panel">
+        <div class="nav-overflow-section">
+          <button class="topbar-actions-item nav-overflow-item active" data-view="editor" onclick="switchView('editor', this)">Note</button>
+          <button class="topbar-actions-item nav-overflow-item" data-view="map" onclick="switchView('map', this)">Mappa</button>
+          <button class="topbar-actions-item nav-overflow-item" data-view="agenda" onclick="switchView('agenda', this)">Agenda</button>
+          <button class="topbar-actions-item nav-overflow-item" data-view="todo" onclick="switchView('todo', this)">ToDo</button>
+          <div class="nav-overflow-divider"></div>
+        </div>
         <button class="topbar-actions-item" onclick="exportJSON()">
           Esporta
         </button>
