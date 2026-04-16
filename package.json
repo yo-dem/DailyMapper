@@ -1,0 +1,47 @@
+{
+  "name": "DailyMapper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mainShell.js",
+  "build": {
+    "appId": "com.yodema.dailymapper",
+    "files": [
+      "dailyMapper.html",
+      "styles.css",
+      "mainShell.js",
+      "js/**/*",
+      "calendar.icns"
+    ],
+    "mac": {
+      "icon": "calendar.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+      "category": "public.app-category.productivity"
+    }
+  },
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yo-dem/DailyMapper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/yo-dem/DailyMapper/issues"
+  },
+  "homepage": "https://github.com/yo-dem/DailyMapper#readme",
+  "devDependencies": {
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1"
+  }
+}

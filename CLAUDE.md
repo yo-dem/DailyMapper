@@ -17,7 +17,7 @@ All application state lives in the single `state` object defined in `js/state.js
 ### Script load order (dependencies must precede dependents)
 
 ```
-state.js → storage.js → theme.js → editor.js → sidebar.js → agenda.js → map.js → ui.js → todo.js → main.js
+state.js → storage.js → theme.js → editor.js → sidebar.js → agenda.js → map.js → ui.js → todo.js → mainShell.js
 ```
 
 Violating this order causes "function not defined" errors at parse time.
