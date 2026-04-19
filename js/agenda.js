@@ -62,12 +62,35 @@ function renderGranularityToolbar() {
   sep2.className = "agenda-gran-sep";
   toolbar.appendChild(sep2);
 
+  const hideBtn = document.createElement("button");
+  hideBtn.className = "agenda-gran-btn" + (state.agendaHideEmpty ? " active" : "");
+  hideBtn.innerHTML = state.agendaHideEmpty ? ICONS.eyeOff : ICONS.eye;
+  hideBtn.title = state.agendaHideEmpty ? "Mostra tutti gli slot" : "Nascondi slot vuoti";
+  hideBtn.onclick = () => {
+    state.agendaHideEmpty = !state.agendaHideEmpty;
+    renderAgenda();
+  };
+  toolbar.appendChild(hideBtn);
+
+  const sep3 = document.createElement("div");
+  sep3.className = "agenda-gran-sep";
+  toolbar.appendChild(sep3);
+
   const clearBtn = document.createElement("button");
   clearBtn.className = "agenda-gran-btn agenda-gran-clear-btn";
   clearBtn.innerHTML = ICONS.trash;
   clearBtn.title = "Cancella tutte le note e gli allarmi del giorno";
   clearBtn.onclick = triggerClearAgenda;
   toolbar.appendChild(clearBtn);
+}
+
+// ── Helper: controlla se almeno uno slot nel range [start, end) ha contenuto ──
+function _slotRangeHasContent(start, end, dd) {
+  for (let s = start; s < end; s++) {
+    const item = dd.agenda[s];
+    if (item && (item.text || item.alarm)) return true;
+  }
+  return false;
 }
 
 // ── Rendering agenda ──────────────────────────────────────────────────────────
@@ -106,6 +129,8 @@ function renderAgenda() {
       if (handledHours.has(h)) continue;
       handledHours.add(h);
 
+      if (state.agendaHideEmpty && !_slotRangeHasContent(h * 12, (h + 1) * 12, dd)) continue;
+
       // Riga padre = lo slot :00 dell'ora, con pulsante collassa
       list.appendChild(
         _createAgendaRow(h * 12, dd, cutoffSlot, {
@@ -121,6 +146,10 @@ function renderAgenda() {
       wrapper.className = "agenda-hour-expanded";
       wrapper.dataset.hour = h;
       for (let sub = h * 12 + 1; sub < (h + 1) * 12; sub++) {
+        if (state.agendaHideEmpty) {
+          const item = dd.agenda[sub];
+          if (!item || (!item.text && !item.alarm)) continue;
+        }
         wrapper.appendChild(
           _createAgendaRow(sub, dd, cutoffSlot, {
             isSubSlot: true,
@@ -132,6 +161,8 @@ function renderAgenda() {
       }
       list.appendChild(wrapper);
     } else {
+      if (state.agendaHideEmpty && !_slotRangeHasContent(i, Math.min(i + step, 288), dd)) continue;
+
       // Solo sulle righe :00 di ogni ora viene mostrato l'expand
       const showExpand = step > 1 && i % 12 === 0;
       list.appendChild(
