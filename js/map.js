@@ -18,17 +18,76 @@ const POSTIT_BG = Object.fromEntries(
 const container = document.getElementById("map-canvas-container");
 const canvas = document.getElementById("infinite-canvas");
 
-// ── Pan & Zoom ────────────────────────────────────────────────────────────────
+// ── Pan & Zoom (Pointer Events: mouse + touch + pinch) ───────────────────────
 let isPanning = false, sx, sy;
+let _pinchActive = false, _pinchStartDist = 0, _pinchStartZoom = 1;
+const _panPtrs = new Map(); // pointerId → {x, y}
 
-container.onmousedown = (e) => {
-  if (e.target === container || e.target === canvas) {
+container.addEventListener("pointerdown", (e) => {
+  if (e.target !== container && e.target !== canvas) return;
+  e.preventDefault();
+  container.setPointerCapture(e.pointerId);
+  _panPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (_panPtrs.size === 1) {
     isPanning = true;
     sx = e.clientX - state.panX;
     sy = e.clientY - state.panY;
     container.style.cursor = "grabbing";
+  } else if (_panPtrs.size === 2) {
+    isPanning = false;
+    const pts = [..._panPtrs.values()];
+    _pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    _pinchStartZoom = state.zoom;
+    _pinchActive = true;
   }
-};
+});
+
+container.addEventListener("pointermove", (e) => {
+  if (!_panPtrs.has(e.pointerId)) return;
+  _panPtrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (_panPtrs.size === 1 && isPanning) {
+    state.panX = e.clientX - sx;
+    state.panY = e.clientY - sy;
+    applyXform();
+  } else if (_panPtrs.size === 2 && _pinchActive) {
+    const pts = [..._panPtrs.values()];
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    const rect = container.getBoundingClientRect();
+    const midX = (pts[0].x + pts[1].x) / 2 - rect.left;
+    const midY = (pts[0].y + pts[1].y) / 2 - rect.top;
+    const cx = (midX - state.panX) / state.zoom;
+    const cy = (midY - state.panY) / state.zoom;
+    state.zoom = Math.max(0.3, Math.min(2, _pinchStartZoom * dist / (_pinchStartDist || 1)));
+    state.panX = midX - cx * state.zoom;
+    state.panY = midY - cy * state.zoom;
+    applyXform();
+  }
+});
+
+container.addEventListener("pointerup", (e) => {
+  _panPtrs.delete(e.pointerId);
+  if (_panPtrs.size < 2) _pinchActive = false;
+  if (_panPtrs.size === 0) {
+    isPanning = false;
+    container.style.cursor = "grab";
+  } else if (_panPtrs.size === 1) {
+    const [, pos] = [..._panPtrs.entries()][0];
+    sx = pos.x - state.panX;
+    sy = pos.y - state.panY;
+    isPanning = true;
+  }
+});
+
+container.addEventListener("pointercancel", (e) => {
+  _panPtrs.delete(e.pointerId);
+  if (_panPtrs.size === 0) {
+    isPanning = false;
+    _pinchActive = false;
+    container.style.cursor = "grab";
+  }
+});
 
 container.onwheel = (e) => {
   e.preventDefault();
@@ -41,18 +100,11 @@ container.onwheel = (e) => {
   applyXform();
 };
 
-window.addEventListener("mousemove", (e) => {
-  if (isPanning) {
-    state.panX = e.clientX - sx;
-    state.panY = e.clientY - sy;
-    applyXform();
-  }
+// Connessioni: tracciamento globale (nessun pointer capture sul link-handle)
+window.addEventListener("pointermove", (e) => {
   if (state.isConnecting) updateTempLine(e);
 });
-
-window.addEventListener("mouseup", (e) => {
-  isPanning = false;
-  container.style.cursor = "grab";
+window.addEventListener("pointerup", (e) => {
   if (state.isConnecting) endConnection(e);
 });
 
@@ -107,28 +159,32 @@ const zoomSliderThumb = document.getElementById("zoom-slider-thumb");
 const zoomSliderTrack = document.querySelector(".zoom-slider-track");
 
 if (zoomSliderThumb) {
-  zoomSliderThumb.addEventListener("mousedown", (e) => {
+  zoomSliderThumb.addEventListener("pointerdown", (e) => {
     isSliderDragging = true;
+    zoomSliderThumb.setPointerCapture(e.pointerId);
     e.preventDefault();
+  });
+  zoomSliderThumb.addEventListener("pointermove", (e) => {
+    if (isSliderDragging) handleSliderDrag(e);
+  });
+  zoomSliderThumb.addEventListener("pointerup", () => {
+    isSliderDragging = false;
+    zoomSliderThumb.style.cursor = "grab";
+  });
+  zoomSliderThumb.addEventListener("pointercancel", () => {
+    isSliderDragging = false;
   });
 }
 
 if (zoomSliderTrack) {
-  zoomSliderTrack.addEventListener("mousedown", (e) => {
+  zoomSliderTrack.addEventListener("pointerdown", (e) => {
+    if (!zoomSliderThumb) return;
     isSliderDragging = true;
+    zoomSliderThumb.setPointerCapture(e.pointerId);
     handleSliderClick(e);
     e.preventDefault();
   });
 }
-
-window.addEventListener("mousemove", (e) => {
-  if (isSliderDragging && zoomSliderTrack) handleSliderDrag(e);
-});
-
-window.addEventListener("mouseup", () => {
-  isSliderDragging = false;
-  if (zoomSliderThumb) zoomSliderThumb.style.cursor = "grab";
-});
 
 function handleSliderClick(e) {
   const rect = zoomSliderTrack.getBoundingClientRect();
@@ -219,13 +275,13 @@ function renderMap() {
           oninput="updatePostitField(${p.id},'title',this.value)">
         <div class="postit-btns">
           <button class="postit-color-btn" onclick="openColorPicker(event,${p.id})" title="Cambia colore">&#11044;</button>
-          <span class="link-handle" onmousedown="startConnection(event,${p.id})">${ICONS.link}</span>
+          <span class="link-handle" onpointerdown="startConnection(event,${p.id})">${ICONS.link}</span>
           <button class="postit-del" onclick="deletePostit(${p.id})">${ICONS.close}</button>
         </div>
       </div>
       <textarea class="postit-body"
         oninput="updatePostitField(${p.id},'content',this.value)">${escHtml(p.content)}</textarea>
-      <div class="postit-resize" onmousedown="startResize(event,${p.id})">
+      <div class="postit-resize" onpointerdown="startResize(event,${p.id})">
         <svg width="8" height="8" viewBox="0 0 8 8"><path d="M1,7 L7,7 L7,1" stroke="#666" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
       </div>
     `;
@@ -252,7 +308,7 @@ function deletePostit(id) {
 // ── Drag postit ───────────────────────────────────────────────────────────────
 function makeDraggable(el, p) {
   let drag = false, ox, oy;
-  el.onmousedown = (e) => {
+  el.addEventListener("pointerdown", (e) => {
     if (
       e.target.tagName === "INPUT" ||
       e.target.tagName === "TEXTAREA" ||
@@ -262,9 +318,10 @@ function makeDraggable(el, p) {
     drag = true;
     ox = e.clientX / state.zoom - p.x;
     oy = e.clientY / state.zoom - p.y;
+    el.setPointerCapture(e.pointerId);
     e.stopPropagation();
-  };
-  window.addEventListener("mousemove", (e) => {
+  });
+  el.addEventListener("pointermove", (e) => {
     if (!drag) return;
     p.x = e.clientX / state.zoom - ox;
     p.y = e.clientY / state.zoom - oy;
@@ -273,7 +330,8 @@ function makeDraggable(el, p) {
     drawArrows();
     saveMap();
   });
-  window.addEventListener("mouseup", () => (drag = false));
+  el.addEventListener("pointerup",     () => { drag = false; });
+  el.addEventListener("pointercancel", () => { drag = false; });
 }
 
 // ── Resize postit ─────────────────────────────────────────────────────────────
@@ -285,6 +343,8 @@ function startResize(e, id) {
   if (!p || !el) return;
   const startX = e.clientX, startY = e.clientY;
   const startW = el.offsetWidth, startH = el.offsetHeight;
+  const handle = e.target.closest(".postit-resize") || e.target;
+  handle.setPointerCapture(e.pointerId);
   const move = (me) => {
     p.w = Math.max(160, startW + (me.clientX - startX) / state.zoom);
     p.h = Math.max(80, startH + (me.clientY - startY) / state.zoom);
@@ -293,12 +353,14 @@ function startResize(e, id) {
     drawArrows();
   };
   const up = () => {
-    window.removeEventListener("mousemove", move);
-    window.removeEventListener("mouseup", up);
+    handle.removeEventListener("pointermove", move);
+    handle.removeEventListener("pointerup", up);
+    handle.removeEventListener("pointercancel", up);
     saveMap();
   };
-  window.addEventListener("mousemove", move);
-  window.addEventListener("mouseup", up);
+  handle.addEventListener("pointermove", move);
+  handle.addEventListener("pointerup", up);
+  handle.addEventListener("pointercancel", up);
 }
 
 // ── Connessioni (frecce) ──────────────────────────────────────────────────────
@@ -417,8 +479,9 @@ function drawArrows() {
     circle.setAttribute("cx", cpX.toFixed(1));
     circle.setAttribute("cy", cpY.toFixed(1));
     circle.setAttribute("r", "5");
-    circle.onmousedown = (e) => {
+    circle.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
+      circle.setPointerCapture(e.pointerId);
       const move = (me) => {
         const rect = container.getBoundingClientRect();
         a.cp.dx = (me.clientX - rect.left - state.panX) / state.zoom - midX;
@@ -426,13 +489,15 @@ function drawArrows() {
         drawArrows();
       };
       const up = () => {
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseup", up);
+        circle.removeEventListener("pointermove", move);
+        circle.removeEventListener("pointerup", up);
+        circle.removeEventListener("pointercancel", up);
         saveMap();
       };
-      window.addEventListener("mousemove", move);
-      window.addEventListener("mouseup", up);
-    };
+      circle.addEventListener("pointermove", move);
+      circle.addEventListener("pointerup", up);
+      circle.addEventListener("pointercancel", up);
+    });
     group.appendChild(circle);
     svg.appendChild(group);
   });

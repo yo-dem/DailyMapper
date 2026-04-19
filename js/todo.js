@@ -1,18 +1,6 @@
 // ── Todo List ─────────────────────────────────────────────────────────────────
 
-let _dragTodoId     = null;
-let _dragFromHandle = false;
-let _placeholder    = null;
-
 const _GRIP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16" fill="currentColor"><circle cx="3" cy="2"  r="1.5"/><circle cx="9" cy="2"  r="1.5"/><circle cx="3" cy="6"  r="1.5"/><circle cx="9" cy="6"  r="1.5"/><circle cx="3" cy="10" r="1.5"/><circle cx="9" cy="10" r="1.5"/><circle cx="3" cy="14" r="1.5"/><circle cx="9" cy="14" r="1.5"/></svg>`;
-
-function _cleanupDrag(restoreItem) {
-  if (restoreItem) restoreItem.style.display = "";
-  _placeholder?.remove();
-  _placeholder    = null;
-  _dragTodoId     = null;
-  _dragFromHandle = false;
-}
 
 function renderTodo() {
   const container = document.getElementById("todo-list");
@@ -20,71 +8,98 @@ function renderTodo() {
   const dd = dayData();
   if (!dd.todos) dd.todos = [];
   container.innerHTML = "";
-
   dd.todos.forEach((todo) => container.appendChild(_createTodoItem(todo, dd)));
-
-  // ── Drop sul container (bubbling da qualsiasi figlio) ──────────────────────
-  container.ondragover = (e) => {
-    e.preventDefault();
-    if (!_placeholder || _dragTodoId === null) return;
-    const target = e.target.closest(".todo-item");
-    if (!target || target.style.display === "none") return; // ignora item nascosto o spazio vuoto
-    const rect   = target.getBoundingClientRect();
-    const isTop  = e.clientY < rect.top + rect.height / 2;
-    if (isTop) target.before(_placeholder);
-    else       target.after(_placeholder);
-  };
-
-  container.ondrop = (e) => {
-    e.preventDefault();
-    if (!_placeholder || _dragTodoId === null) return;
-    // Conta gli item visibili che precedono il placeholder nel DOM
-    const children  = [...container.children];
-    const phIdx     = children.indexOf(_placeholder);
-    let   insertAt  = 0;
-    for (let i = 0; i < phIdx; i++) {
-      const ch = children[i];
-      if (ch.classList.contains("todo-item") && ch.style.display !== "none") insertAt++;
-    }
-    const fromIdx = dd.todos.findIndex((t) => t.id === _dragTodoId);
-    if (fromIdx === -1) { _cleanupDrag(); return; }
-    const [moved] = dd.todos.splice(fromIdx, 1);
-    dd.todos.splice(insertAt, 0, moved);
-    _cleanupDrag();
-    saveMap();
-    renderTodo();
-  };
 }
 
 function _createTodoItem(todo, dd) {
   const item = document.createElement("div");
   item.className = "todo-item" + (todo.checked ? " checked" : "");
   item.id = "todo-" + todo.id;
-  item.draggable = true;
 
-  // ── Drag handle ───────────────────────────────────────────────────────────
+  // ── Drag handle (pointer-based: funziona su mouse e touch) ───────────────
   const handle = document.createElement("div");
   handle.className = "todo-drag-handle";
   handle.innerHTML = _GRIP_SVG;
   handle.title = "Trascina per riordinare";
-  handle.addEventListener("mousedown", () => { _dragFromHandle = true; });
+  handle.style.touchAction = "none";
 
-  item.addEventListener("dragstart", (e) => {
-    if (!_dragFromHandle) { e.preventDefault(); return; }
-    _dragTodoId = todo.id;
-    e.dataTransfer.effectAllowed = "move";
-    // Crea la placeholder con la stessa altezza dell'item
-    _placeholder = document.createElement("div");
-    _placeholder.className = "todo-placeholder";
-    _placeholder.style.height = item.offsetHeight + "px";
-    item.after(_placeholder);
-    // Nasconde l'item dopo che il browser ha catturato il ghost di drag
-    setTimeout(() => { item.style.display = "none"; }, 0);
-  });
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
 
-  item.addEventListener("dragend", () => {
-    // Se drop non è avvenuto (drag annullato) ripristina l'item
-    if (_dragTodoId !== null) _cleanupDrag(item);
+    const list = document.getElementById("todo-list");
+    const itemRect = item.getBoundingClientRect();
+    const startY = e.clientY;
+
+    // Ghost che segue il dito / cursore
+    const ghost = document.createElement("div");
+    ghost.className = "todo-item";
+    ghost.style.cssText = `position:fixed;left:${itemRect.left}px;top:${itemRect.top}px;width:${itemRect.width}px;` +
+      `opacity:0.85;pointer-events:none;z-index:9999;` +
+      `box-shadow:0 8px 24px rgba(0,0,0,0.2);transform:rotate(1.5deg) scale(1.02);transition:none;` +
+      `border:2px solid var(--md-primary);background:var(--md-surface);border-radius:12px;padding:14px 16px;`;
+    ghost.innerHTML = item.innerHTML;
+    document.body.appendChild(ghost);
+
+    // Placeholder nel posto originale
+    const placeholder = document.createElement("div");
+    placeholder.className = "todo-placeholder";
+    placeholder.style.height = itemRect.height + "px";
+    item.before(placeholder);
+    item.style.opacity = "0";
+
+    const onMove = (me) => {
+      ghost.style.top = (itemRect.top + me.clientY - startY) + "px";
+      // Sposta il placeholder nella posizione corretta
+      const siblings = [...list.querySelectorAll(".todo-item")].filter(it => it !== item);
+      let before = null;
+      for (const sib of siblings) {
+        const r = sib.getBoundingClientRect();
+        if (me.clientY < r.top + r.height / 2) { before = sib; break; }
+      }
+      if (before) before.before(placeholder);
+      else list.appendChild(placeholder);
+    };
+
+    const onUp = () => {
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onUp);
+      handle.removeEventListener("pointercancel", onCancel);
+      ghost.remove();
+
+      // Calcola indice d'inserimento dalla posizione del placeholder nel DOM
+      const children = [...list.children];
+      const phIdx = children.indexOf(placeholder);
+      let insertAt = 0;
+      for (let i = 0; i < phIdx; i++) {
+        if (children[i].classList.contains("todo-item")) insertAt++;
+      }
+      placeholder.remove();
+      item.style.opacity = "";
+
+      const fromIdx = dd.todos.findIndex(t => t.id === todo.id);
+      if (fromIdx !== -1 && fromIdx !== insertAt) {
+        const [moved] = dd.todos.splice(fromIdx, 1);
+        if (fromIdx < insertAt) insertAt--;
+        dd.todos.splice(insertAt, 0, moved);
+        saveMap();
+      }
+      renderTodo();
+    };
+
+    const onCancel = () => {
+      handle.removeEventListener("pointermove", onMove);
+      handle.removeEventListener("pointerup", onUp);
+      handle.removeEventListener("pointercancel", onCancel);
+      ghost.remove();
+      placeholder.remove();
+      item.style.opacity = "";
+      renderTodo();
+    };
+
+    handle.addEventListener("pointermove", onMove);
+    handle.addEventListener("pointerup", onUp);
+    handle.addEventListener("pointercancel", onCancel);
   });
 
   // ── Checkbox ──────────────────────────────────────────────────────────────
