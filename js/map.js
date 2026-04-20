@@ -313,7 +313,9 @@ function makeDraggable(el, p) {
       e.target.tagName === "INPUT" ||
       e.target.tagName === "TEXTAREA" ||
       e.target.closest(".link-handle") ||
-      e.target.closest(".postit-resize")
+      e.target.closest(".postit-resize") ||
+      e.target.closest(".postit-color-btn") ||
+      e.target.closest(".postit-del")
     ) return;
     drag = true;
     ox = e.clientX / state.zoom - p.x;
@@ -481,7 +483,6 @@ function drawArrows() {
     circle.setAttribute("r", "5");
     circle.addEventListener("pointerdown", (e) => {
       e.stopPropagation();
-      circle.setPointerCapture(e.pointerId);
       const move = (me) => {
         const rect = container.getBoundingClientRect();
         a.cp.dx = (me.clientX - rect.left - state.panX) / state.zoom - midX;
@@ -489,14 +490,14 @@ function drawArrows() {
         drawArrows();
       };
       const up = () => {
-        circle.removeEventListener("pointermove", move);
-        circle.removeEventListener("pointerup", up);
-        circle.removeEventListener("pointercancel", up);
+        container.removeEventListener("pointermove", move);
+        container.removeEventListener("pointerup", up);
+        container.removeEventListener("pointercancel", up);
         saveMap();
       };
-      circle.addEventListener("pointermove", move);
-      circle.addEventListener("pointerup", up);
-      circle.addEventListener("pointercancel", up);
+      container.addEventListener("pointermove", move);
+      container.addEventListener("pointerup", up);
+      container.addEventListener("pointercancel", up);
     });
     group.appendChild(circle);
     svg.appendChild(group);
