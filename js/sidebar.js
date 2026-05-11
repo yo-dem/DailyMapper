@@ -282,7 +282,49 @@ function renderDateModal() {
     const cell = document.createElement("button");
     cell.type = "button";
     cell.className = "date-modal-cell date-modal-day";
-    cell.textContent = day;
+
+    const numSpan = document.createElement("span");
+    numSpan.textContent = day;
+    cell.appendChild(numSpan);
+
+    const dd = state.data[isoDate];
+    const noteCount = dd && dd.notes && dd.notes.trim().length > 0 ? 1 : 0;
+    const mapCount = dd && dd.postits ? dd.postits.length : 0;
+    const agendaCount = dd && dd.agenda
+      ? Object.values(dd.agenda).filter(
+          (s) => (s.text && s.text.trim().length > 0) || s.alarm
+        ).length
+      : 0;
+    const todoCount = dd && dd.todos ? dd.todos.length : 0;
+
+    if (noteCount > 0 || mapCount > 0 || agendaCount > 0 || todoCount > 0) {
+      const dotsWrap = document.createElement("span");
+      dotsWrap.className = "modal-day-dots";
+
+      const addDot = (cls) => {
+        const d = document.createElement("span");
+        d.className = `modal-day-dot ${cls}`;
+        dotsWrap.appendChild(d);
+      };
+      if (noteCount > 0) addDot("has-note");
+      if (mapCount > 0) addDot("has-map");
+      if (agendaCount > 0) addDot("has-agenda");
+      if (todoCount > 0) addDot("has-todo");
+
+      const parts = [];
+      if (noteCount > 0) parts.push(noteCount === 1 ? "1 appunto" : `${noteCount} appunti`);
+      if (mapCount > 0) parts.push(mapCount === 1 ? "1 elemento in mappa" : `${mapCount} elementi in mappa`);
+      if (agendaCount > 0) parts.push(agendaCount === 1 ? "1 elemento in agenda" : `${agendaCount} elementi in agenda`);
+      if (todoCount > 0) parts.push(todoCount === 1 ? "1 attività" : `${todoCount} attività`);
+
+      const tooltip = document.createElement("span");
+      tooltip.className = "modal-dot-tooltip";
+      tooltip.textContent = parts.join(", ");
+      dotsWrap.appendChild(tooltip);
+
+      cell.appendChild(dotsWrap);
+    }
+
     if (isoDate === state.currentDay) cell.classList.add("selected");
     if (isoDate === TODAY_ISO) cell.classList.add("today");
     cell.onclick = () => selectModalDate(isoDate);
